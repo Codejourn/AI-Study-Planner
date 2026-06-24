@@ -1,227 +1,88 @@
-# AI_Study_Planner
+# FocusGeek — AI-Powered Study Planner & Learning Assistant
 
-AI_Study_Planner is an AI-powered academic productivity platform designed to help students plan their studies, track progress, stay focused, and improve exam readiness through intelligent recommendations and learning analytics.
+> A personal academic assistant that helps students plan studies, stay focused, and track exam readiness.
 
-The project combines the organizational capabilities of modern productivity tools with AI-driven learning assistance to create a personalized study experience.
-
----
-
-## Problem Statement
-
-Students often struggle with:
-
-* Managing multiple subjects and deadlines
-* Creating realistic study schedules
-* Maintaining study consistency
-* Identifying weak areas before exams
-* Staying focused during study sessions
-* Effectively revising large amounts of study material
-
-Most existing tools provide task management but lack personalized academic guidance and adaptive planning.
-
-AI_Study_Planner aims to solve these challenges through intelligent scheduling, progress tracking, focus monitoring, and AI-assisted learning.
+![Status](https://img.shields.io/badge/status-planning%20phase-orange.svg)
+![Stack](https://img.shields.io/badge/stack-Next.js%20%7C%20AWS%20%7C%20AI-purple.svg)
 
 ---
 
-## Project Objectives
+## 📌 Project Overview
 
-* Generate personalized study plans
-* Help students manage academic goals
-* Track study progress and productivity
-* Provide AI-powered learning assistance
-* Improve focus during study sessions
-* Evaluate exam readiness using data-driven insights
-* Generate quizzes and revision materials automatically
+FocusGeek is a full-stack AI-powered study planner built for students managing multiple subjects and exam deadlines. The goal is to combine smart scheduling, note-based learning, and focus tracking into one platform.
+
+This project is currently in the **planning and design phase** as part of a 6-week builder program.
 
 ---
 
-## Core Features
+## 🎯 Problem Statement
 
-### Planning & Organization
+Students struggle with:
 
-* Subject Management
-* Goal Management
-* Task Management
-* Academic Calendar
-* Study Planner Dashboard
-
-### AI Study Planner
-
-* Personalized Study Schedule Generation
-* Smart Task Prioritization
-* Dynamic Schedule Updates
-* AI Recommendations
-
-### Learning Assistant
-
-* Notes Upload (PDF, PPT, DOCX)
-* AI-Powered Question Answering
-* Automatic Summaries
-* Flashcard Generation
-* Important Topic Extraction
-
-### Focus & Productivity
-
-* Focus Mode
-* Pomodoro Timer
-* Focus Session Tracking
-* Focus Score Calculation
-
-### Assessment & Analytics
-
-* Progress Tracking
-* Weekend Quiz Generator
-* Quiz Evaluation
-* Exam Readiness Score
-* Productivity Analytics Dashboard
+- Managing multiple subjects at the same time
+- Creating realistic study plans around exams
+- Staying focused while studying
+- Knowing how prepared they actually are for an exam
 
 ---
 
-## Technology Stack
+## 💡 Proposed Solution
 
-### Frontend
+An AI-powered web app with five core modules:
 
-* Next.js
-* TypeScript
-* Tailwind CSS
-* ShadCN UI
-
-### Backend
-
-* AWS Lambda
-* Amazon API Gateway
-
-### Database
-
-* Amazon DynamoDB
-
-### Authentication
-
-* Amazon Cognito
-
-### Storage
-
-* Amazon S3
-
-### Artificial Intelligence
-
-* Amazon Bedrock
-
-### Visualization
-
-* Recharts
+1. **Study Planner** — AI-generated daily/weekly schedules based on exam dates and available hours
+2. **Notes Assistant** — Upload notes and ask questions; AI answers from your own content (RAG)
+3. **Focus Mode** — Pomodoro timer with session tracking and focus score
+4. **Quiz Generator** — Auto-generate quizzes from uploaded notes
+5. **Readiness Score** — Calculated from syllabus completion, study hours, and quiz performance
 
 ---
 
-## Proposed AWS Architecture
+## 🛠️ Planned Tech Stack
 
-User
-↓
-Next.js Frontend
-↓
-Amazon API Gateway
-↓
-AWS Lambda
-↓
-Amazon DynamoDB
-
-Authentication
-↓
-Amazon Cognito
-
-File Uploads
-↓
-Amazon S3
-
-AI Services
-↓
-Amazon Bedrock
+| Layer | Technology |
+|-------|-----------|
+| Frontend | Next.js, TypeScript, Tailwind CSS |
+| Backend | AWS Lambda, API Gateway |
+| Database | Amazon DynamoDB |
+| Auth | Amazon Cognito |
+| File Storage | Amazon S3 |
+| AI | Amazon Bedrock |
 
 ---
 
-## Project Workflow
+## 📐 Wireframes & System Design
 
-1. User creates an account.
-2. User adds subjects, goals, deadlines, and available study hours.
-3. AI generates a personalized study plan.
-4. User tracks completed tasks and study sessions.
-5. Notes and study materials can be uploaded for AI-assisted learning.
-6. Weekend quizzes are generated automatically.
-7. Readiness scores and analytics are updated based on progress and performance.
+> 🔄 To be added — system design diagram coming this week
 
 ---
 
-## Current Development Status
+## 🗺️ Roadmap
 
-### Completed
-
-* Problem Statement Definition
-* Feature Planning
-* Competitor Research
-* AWS Service Selection
-* System Architecture Design
-* Development Roadmap
-
-### In Progress
-
-* User Flow Design
-* UI/UX Wireframes
-* Frontend Development
-* AWS Integration
-
-### Planned
-
-* AI Study Planner
-* Learning Assistant
-* Focus Mode
-* Quiz Generator
-* Readiness Analytics
+- [x] Project idea finalized
+- [x] Wireframes designed
+- [x] System design diagram created
+- [ ] Authentication setup
+- [ ] Dashboard UI
+- [ ] Subject & Task management
+- [ ] AI Schedule Generator
+- [ ] Notes upload & AI chat
+- [ ] Focus Mode
+- [ ] Quiz & Readiness Score
+- [ ] Deployment on AWS
 
 ---
 
-## Repository Structure
+## 👤 Author
 
-AI_Study_Planner/
+**Varnika Yadav and Jayanti Goyal**
+B.Tech Computer Science · Semester 5
 
-├── frontend/
-
-├── backend/
-
-├── docs/
-
-│   ├── research/
-
-│   ├── architecture/
-
-│   ├── wireframes/
-
-│   └── user-flow/
-
-├── screenshots/
-
-├── README.md
-
-└── progress-log.md
+- GitHub: [@Codejourn](https://github.com/Codejourn)
+- LinkedIn: [your-profile](www.linkedin.com/in/varnika-yadav-8620a9327)
 
 ---
 
-## Future Scope
-
-* Chrome Extension for Study Assistance
-* Google Calendar Integration
-* Advanced Learning Analytics
-* Collaborative Study Groups
-* Mobile Application
-* Voice-Based AI Tutor
-
----
-
-## Team
-
-Developed as part of the AWS Summer Builder Cohort 2026.
-
----
-
-## License
-
-This project is currently under development and intended for educational and research purposes.
+<div align="center">
+  <sub>Part of the 6-Week Builder Program · Week 2</sub>
+</div>
