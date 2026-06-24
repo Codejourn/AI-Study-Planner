@@ -2,9 +2,6 @@
 
 > A personal academic assistant that helps students plan studies, stay focused, and track exam readiness.
 
-![Status](https://img.shields.io/badge/status-planning%20phase-orange.svg)
-![Stack](https://img.shields.io/badge/stack-Next.js%20%7C%20AWS%20%7C%20AI-purple.svg)
-
 ---
 
 ## 📌 Project Overview
@@ -53,7 +50,7 @@ An AI-powered web app with five core modules:
 
 ## 📐 Wireframes & System Design
 
-> 🔄 To be added — system design diagram coming this week
+> ![System Design](docs/system-design.png)
 
 ---
 
