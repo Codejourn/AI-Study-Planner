@@ -1,6 +1,6 @@
 "use client";
 
-import Sidebar from "@/components/Sidebar";
+import AppShell from "@/components/AppShell";
 import { Brain, Sparkles, CheckCircle2 } from "lucide-react";
 
 const questions = [
@@ -21,90 +21,63 @@ const questions = [
 
 export default function QuizPage() {
   return (
-    <div className="flex min-h-screen bg-slate-50">
-      <Sidebar />
+    <AppShell
+      title="AI Quiz Generator"
+      subtitle="Generate quizzes from uploaded notes."
+    >
+      <div className="flex justify-end mb-5">
+        <button className="bg-linear-to-br from-luna-200 to-luna-300 text-white text-sm font-semibold px-5 py-2.5 rounded-full flex gap-2 items-center hover:brightness-110 transition">
+          <Sparkles size={15} />
+          Generate Quiz
+        </button>
+      </div>
 
-      <main className="ml-64 flex-1 p-10">
-
-        <div className="flex justify-between items-center">
-
-          <div>
-
-            <h1 className="text-4xl font-bold">
-              AI Quiz Generator 🧠
-            </h1>
-
-            <p className="text-gray-500 mt-2">
-              Generate quizzes from uploaded notes.
-            </p>
-
-          </div>
-
-          <button className="bg-indigo-600 text-white px-6 py-3 rounded-xl flex gap-2 items-center">
-            <Sparkles size={18}/>
-            Generate Quiz
-          </button>
-
+      <div className="grid grid-cols-3 gap-4">
+        <div className="card text-center">
+          <Brain className="mx-auto text-luna-100" size={26} />
+          <h2 className="mt-2.5 text-sm font-semibold text-luna-100/60">
+            Questions
+          </h2>
+          <p className="text-2xl font-bold mt-1">10</p>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-6 mt-10">
-
-          <div className="card text-center">
-            <Brain className="mx-auto text-indigo-600" size={35}/>
-            <h2 className="mt-4 font-semibold">Questions</h2>
-            <p className="text-4xl font-bold mt-2">10</p>
-          </div>
-
-          <div className="card text-center">
-            <CheckCircle2 className="mx-auto text-green-600" size={35}/>
-            <h2 className="mt-4 font-semibold">Difficulty</h2>
-            <p className="text-4xl font-bold mt-2">Medium</p>
-          </div>
-
-          <div className="card text-center">
-            <Sparkles className="mx-auto text-yellow-500" size={35}/>
-            <h2 className="mt-4 font-semibold">Estimated Score</h2>
-            <p className="text-4xl font-bold mt-2">82%</p>
-          </div>
-
+        <div className="card text-center">
+          <CheckCircle2 className="mx-auto text-emerald-400" size={26} />
+          <h2 className="mt-2.5 text-sm font-semibold text-luna-100/60">
+            Difficulty
+          </h2>
+          <p className="text-2xl font-bold mt-1">Medium</p>
         </div>
 
-        <div className="mt-10 space-y-8">
+        <div className="card text-center">
+          <Sparkles className="mx-auto text-amber-400" size={26} />
+          <h2 className="mt-2.5 text-sm font-semibold text-luna-100/60">
+            Estimated Score
+          </h2>
+          <p className="text-2xl font-bold mt-1">82%</p>
+        </div>
+      </div>
 
-          {questions.map((q, i) => (
+      <div className="mt-5 space-y-4">
+        {questions.map((q, i) => (
+          <div key={i} className="card">
+            <h2 className="font-bold text-sm mb-4">
+              Q{i + 1}. {q.q}
+            </h2>
 
-            <div
-              key={i}
-              className="card"
-            >
-
-              <h2 className="font-bold text-xl mb-6">
-                Q{i + 1}. {q.q}
-              </h2>
-
-              <div className="grid gap-4">
-
-                {q.options.map((option) => (
-
-                  <button
-                    key={option}
-                    className="border rounded-xl p-4 hover:bg-indigo-50 text-left"
-                  >
-                    {option}
-                  </button>
-
-                ))}
-
-              </div>
-
+            <div className="grid gap-2.5">
+              {q.options.map((option) => (
+                <button
+                  key={option}
+                  className="border border-luna-100/10 rounded-xl px-4 py-2.5 text-sm hover:bg-white/5 hover:border-luna-100/25 text-left transition"
+                >
+                  {option}
+                </button>
+              ))}
             </div>
-
-          ))}
-
-        </div>
-
-      </main>
-
-    </div>
+          </div>
+        ))}
+      </div>
+    </AppShell>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Sidebar from "@/components/Sidebar";
+import AppShell from "@/components/AppShell";
 import {
   Play,
   Pause,
@@ -32,211 +32,117 @@ export default function FocusPage() {
   const secs = String(seconds % 60).padStart(2, "0");
 
   return (
-    <div className="flex min-h-screen bg-slate-50">
-
-      <Sidebar />
-
-      <main className="ml-64 flex-1 p-10">
-
-        <h1 className="text-4xl font-bold">
-          Focus Mode 🎯
-        </h1>
-
-        <p className="text-gray-500 mt-2">
-          Stay productive using the Pomodoro technique.
-        </p>
-
-        {/* Stats */}
-
-        <div className="grid lg:grid-cols-4 gap-6 mt-10">
-
-          <div className="card text-center">
-
-            <Clock3
-              className="mx-auto text-indigo-600"
-              size={35}
-            />
-
-            <h2 className="mt-4 text-xl font-semibold">
-              Focus Time
-            </h2>
-
-            <p className="text-3xl font-bold mt-2">
-              2h 35m
-            </p>
-
-          </div>
-
-          <div className="card text-center">
-
-            <Target
-              className="mx-auto text-green-600"
-              size={35}
-            />
-
-            <h2 className="mt-4 text-xl font-semibold">
-              Sessions
-            </h2>
-
-            <p className="text-3xl font-bold mt-2">
-              5
-            </p>
-
-          </div>
-
-          <div className="card text-center">
-
-            <Flame
-              className="mx-auto text-orange-500"
-              size={35}
-            />
-
-            <h2 className="mt-4 text-xl font-semibold">
-              Streak
-            </h2>
-
-            <p className="text-3xl font-bold mt-2">
-              14 Days
-            </p>
-
-          </div>
-
-          <div className="card text-center">
-
-            <Coffee
-              className="mx-auto text-yellow-600"
-              size={35}
-            />
-
-            <h2 className="mt-4 text-xl font-semibold">
-              Breaks
-            </h2>
-
-            <p className="text-3xl font-bold mt-2">
-              3
-            </p>
-
-          </div>
-
-        </div>
-
-        {/* Timer */}
-
-        <div className="card mt-10 text-center">
-
-          <h2 className="text-3xl font-bold">
-            Pomodoro Timer
+    <AppShell
+      title="Focus Mode"
+      subtitle="Stay productive using the Pomodoro technique."
+    >
+      {/* Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="card text-center">
+          <Clock3 className="mx-auto text-luna-100" size={24} />
+          <h2 className="mt-2.5 text-sm font-semibold text-luna-100/60">
+            Focus Time
           </h2>
-
-          <div className="mt-10 w-72 h-72 mx-auto rounded-full border-[14px] border-indigo-500 flex items-center justify-center shadow-lg">
-
-            <span className="text-6xl font-bold">
-              {minutes}:{secs}
-            </span>
-
-          </div>
-
-          <div className="flex justify-center gap-5 mt-10">
-
-            <button
-              onClick={() => setRunning(true)}
-              className="bg-green-600 text-white px-6 py-3 rounded-xl flex items-center gap-2"
-            >
-              <Play size={18} />
-              Start
-            </button>
-
-            <button
-              onClick={() => setRunning(false)}
-              className="bg-yellow-500 text-white px-6 py-3 rounded-xl flex items-center gap-2"
-            >
-              <Pause size={18} />
-              Pause
-            </button>
-
-            <button
-              onClick={() => {
-                setRunning(false);
-                setSeconds(25 * 60);
-              }}
-              className="bg-red-500 text-white px-6 py-3 rounded-xl flex items-center gap-2"
-            >
-              <RotateCcw size={18} />
-              Reset
-            </button>
-
-          </div>
-
+          <p className="text-xl font-bold mt-1">2h 35m</p>
         </div>
 
-        {/* Bottom */}
+        <div className="card text-center">
+          <Target className="mx-auto text-emerald-400" size={24} />
+          <h2 className="mt-2.5 text-sm font-semibold text-luna-100/60">
+            Sessions
+          </h2>
+          <p className="text-xl font-bold mt-1">5</p>
+        </div>
 
-        <div className="grid lg:grid-cols-2 gap-8 mt-10">
+        <div className="card text-center">
+          <Flame className="mx-auto text-amber-500" size={24} />
+          <h2 className="mt-2.5 text-sm font-semibold text-luna-100/60">
+            Streak
+          </h2>
+          <p className="text-xl font-bold mt-1">14 Days</p>
+        </div>
 
-          {/* Focus Score */}
+        <div className="card text-center">
+          <Coffee className="mx-auto text-amber-300" size={24} />
+          <h2 className="mt-2.5 text-sm font-semibold text-luna-100/60">
+            Breaks
+          </h2>
+          <p className="text-xl font-bold mt-1">3</p>
+        </div>
+      </div>
 
-          <div className="card">
+      {/* Timer */}
+      <div className="card mt-5 text-center py-8">
+        <h2 className="text-lg font-bold">Pomodoro Timer</h2>
 
-            <h2 className="text-2xl font-bold">
-              Today's Focus Score
-            </h2>
+        <div className="mt-6 w-52 h-52 mx-auto rounded-full border-[10px] border-luna-200 flex items-center justify-center shadow-lg">
+          <span className="text-4xl font-bold">
+            {minutes}:{secs}
+          </span>
+        </div>
 
-            <div className="mt-8 flex items-center justify-center">
+        <div className="flex justify-center gap-3 mt-8 flex-wrap">
+          <button
+            onClick={() => setRunning(true)}
+            className="bg-emerald-500 text-white text-sm font-semibold px-5 py-2.5 rounded-full flex items-center gap-2"
+          >
+            <Play size={15} />
+            Start
+          </button>
 
-              <div className="w-52 h-52 rounded-full border-[14px] border-green-500 flex items-center justify-center">
+          <button
+            onClick={() => setRunning(false)}
+            className="bg-amber-500 text-white text-sm font-semibold px-5 py-2.5 rounded-full flex items-center gap-2"
+          >
+            <Pause size={15} />
+            Pause
+          </button>
 
-                <div className="text-center">
+          <button
+            onClick={() => {
+              setRunning(false);
+              setSeconds(25 * 60);
+            }}
+            className="bg-red-500 text-white text-sm font-semibold px-5 py-2.5 rounded-full flex items-center gap-2"
+          >
+            <RotateCcw size={15} />
+            Reset
+          </button>
+        </div>
+      </div>
 
-                  <h1 className="text-5xl font-bold text-green-600">
-                    91%
-                  </h1>
+      {/* Bottom */}
+      <div className="grid lg:grid-cols-2 gap-5 mt-5">
+        {/* Focus Score */}
+        <div className="card">
+          <h2 className="text-base font-bold">Today&apos;s Focus Score</h2>
 
-                  <p className="text-gray-500 mt-2">
-                    Excellent
-                  </p>
-
-                </div>
-
+          <div className="mt-5 flex items-center justify-center">
+            <div className="w-36 h-36 rounded-full border-[10px] border-emerald-400 flex items-center justify-center">
+              <div className="text-center">
+                <h1 className="text-3xl font-bold text-emerald-400">91%</h1>
+                <p className="text-luna-100/60 text-xs mt-1">Excellent</p>
               </div>
-
             </div>
-
           </div>
-
-          {/* Ambient Sounds */}
-
-          <div className="card">
-
-            <h2 className="text-2xl font-bold">
-              Ambient Sounds
-            </h2>
-
-            <div className="grid grid-cols-2 gap-4 mt-8">
-
-              {[
-                "🌧 Rain",
-                "☕ Cafe",
-                "🌲 Forest",
-                "🌊 Ocean",
-              ].map((sound) => (
-
-                <button
-                  key={sound}
-                  className="bg-indigo-50 hover:bg-indigo-100 rounded-xl p-6 font-semibold"
-                >
-                  {sound}
-                </button>
-
-              ))}
-
-            </div>
-
-          </div>
-
         </div>
 
-      </main>
+        {/* Ambient Sounds */}
+        <div className="card">
+          <h2 className="text-base font-bold">Ambient Sounds</h2>
 
-    </div>
+          <div className="grid grid-cols-2 gap-3 mt-5">
+            {["🌧 Rain", "☕ Cafe", "🌲 Forest", "🌊 Ocean"].map((sound) => (
+              <button
+                key={sound}
+                className="bg-white/5 hover:bg-white/10 border border-luna-100/10 rounded-xl py-4 text-sm font-semibold transition"
+              >
+                {sound}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </AppShell>
   );
 }

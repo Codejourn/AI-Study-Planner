@@ -1,68 +1,77 @@
 @import "tailwindcss";
 
-html{
-scroll-behavior:smooth;
+@theme {
+  --color-luna-100: #a7ebf2;
+  --color-luna-200: #54acbf;
+  --color-luna-300: #26658c;
+  --color-luna-400: #023859;
+  --color-luna-500: #011c40;
 }
 
-body{
-background:#F8FAFC;
-font-family:Inter,sans-serif;
-color:#111827;
+html {
+  scroll-behavior: smooth;
 }
 
-*{
-box-sizing:border-box;
+body {
+  background: radial-gradient(circle at 15% -10%, #0c3f70 0%, #011c40 45%, #010f24 100%);
+  background-attachment: fixed;
+  color: #eaf6fb;
+  font-family: Inter, sans-serif;
+  min-height: 100vh;
 }
 
-.card{
-background:white;
-border-radius:20px;
-padding:24px;
-box-shadow:0 10px 25px rgba(0,0,0,.05);
-transition:.3s;
+* {
+  box-sizing: border-box;
 }
 
-.card:hover{
-transform:translateY(-3px);
+.card {
+  background: linear-gradient(160deg, rgba(167, 235, 242, 0.08), rgba(2, 56, 89, 0.35));
+  border: 1px solid rgba(167, 235, 242, 0.14);
+  border-radius: 18px;
+  padding: 16px;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 12px 24px rgba(1, 12, 36, 0.4);
+  transition: 0.2s;
 }
 
-.gradient{
-background:linear-gradient(135deg,#4F46E5,#06B6D4);
+.card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(167, 235, 242, 0.28);
 }
 
-.sidebar-item{
-display:flex;
-gap:12px;
-align-items:center;
-padding:12px 18px;
-border-radius:12px;
-transition:.25s;
-cursor:pointer;
+.gradient {
+  background: linear-gradient(135deg, #26658c, #54acbf);
 }
 
-.sidebar-item:hover{
-background:#EEF2FF;
+.text-gradient {
+  background: linear-gradient(135deg, #a7ebf2, #54acbf);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
-button{
-transition:all .25s ease;
+.glass-input {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(167, 235, 242, 0.16);
+  color: #eaf6fb;
 }
 
-button:hover{
-transform:translateY(-2px);
+.glass-input::placeholder {
+  color: rgba(234, 246, 251, 0.4);
 }
 
-.card{
-border:1px solid #E5E7EB;
+.glass-input:focus {
+  outline: none;
+  border-color: #54acbf;
+  box-shadow: 0 0 0 3px rgba(84, 172, 191, 0.2);
 }
 
-input {
-  transition: 0.25s;
+button {
+  transition: all 0.25s ease;
 }
 
-input:focus {
-  border-color: #4F46E5;
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+button:hover {
+  transform: translateY(-2px);
 }
 
 ::-webkit-scrollbar {
@@ -70,6 +79,6 @@ input:focus {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #26658c;
   border-radius: 20px;
 }

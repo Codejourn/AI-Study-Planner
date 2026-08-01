@@ -1,6 +1,6 @@
 "use client";
 
-import Sidebar from "@/components/Sidebar";
+import AppShell from "@/components/AppShell";
 import {
   CalendarDays,
   Sparkles,
@@ -10,270 +10,129 @@ import {
 } from "lucide-react";
 
 const schedule = [
-  {
-    time: "9:00 AM",
-    subject: "DSA",
-    color: "bg-indigo-500",
-  },
-  {
-    time: "11:00 AM",
-    subject: "DBMS",
-    color: "bg-green-500",
-  },
-  {
-    time: "2:00 PM",
-    subject: "Operating Systems",
-    color: "bg-orange-500",
-  },
-  {
-    time: "5:00 PM",
-    subject: "Revision",
-    color: "bg-pink-500",
-  },
+  { time: "9:00 AM", subject: "DSA", color: "bg-luna-200" },
+  { time: "11:00 AM", subject: "DBMS", color: "bg-emerald-500" },
+  { time: "2:00 PM", subject: "Operating Systems", color: "bg-amber-500" },
+  { time: "5:00 PM", subject: "Revision", color: "bg-pink-500" },
 ];
 
 export default function Planner() {
   return (
-    <div className="flex bg-slate-50 min-h-screen">
+    <AppShell
+      title="Study Planner"
+      subtitle="Organize your day with AI-generated schedules."
+    >
+      <div className="flex justify-end mb-5">
+        <button className="flex items-center gap-2 bg-linear-to-br from-luna-200 to-luna-300 text-white text-sm font-semibold px-5 py-2.5 rounded-full hover:brightness-110 transition">
+          <Sparkles size={15} />
+          Generate AI Schedule
+        </button>
+      </div>
 
-      <Sidebar />
+      {/* Top Cards */}
+      <div className="grid grid-cols-3 gap-4">
+        <div className="card">
+          <CalendarDays size={20} className="text-luna-100" />
+          <h2 className="text-sm font-semibold mt-2.5 text-luna-100/60">
+            Today&apos;s Tasks
+          </h2>
+          <p className="text-2xl font-bold mt-1">8</p>
+        </div>
 
-      <main className="ml-64 flex-1 p-10">
+        <div className="card">
+          <Flame size={20} className="text-amber-500" />
+          <h2 className="text-sm font-semibold mt-2.5 text-luna-100/60">
+            Study Streak
+          </h2>
+          <p className="text-2xl font-bold mt-1">14 🔥</p>
+        </div>
 
-        {/* Header */}
+        <div className="card">
+          <Clock3 size={20} className="text-emerald-400" />
+          <h2 className="text-sm font-semibold mt-2.5 text-luna-100/60">
+            Planned Hours
+          </h2>
+          <p className="text-2xl font-bold mt-1">6h</p>
+        </div>
+      </div>
 
-        <div className="flex justify-between items-center">
+      {/* Weekly Planner */}
+      <div className="card mt-5">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-base font-bold">Today&apos;s Schedule</h2>
 
-          <div>
-
-            <h1 className="text-4xl font-bold">
-              Study Planner 📅
-            </h1>
-
-            <p className="text-gray-500 mt-2">
-              Organize your day with AI-generated schedules.
-            </p>
-
-          </div>
-
-          <button className="flex items-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-xl hover:bg-indigo-700">
-
-            <Sparkles size={20} />
-
-            Generate AI Schedule
-
+          <button className="flex gap-1.5 items-center bg-white/5 border border-luna-100/10 text-xs font-semibold px-3.5 py-2 rounded-full hover:bg-white/10 transition">
+            <Plus size={14} />
+            Add Task
           </button>
-
         </div>
 
-        {/* Top Cards */}
+        <div className="space-y-2.5">
+          {schedule.map((item) => (
+            <div
+              key={item.time}
+              className="flex justify-between items-center border border-luna-100/10 rounded-xl px-4 py-3 hover:bg-white/5 transition"
+            >
+              <div className="flex gap-4 items-center">
+                <div className={`w-2.5 h-10 rounded-full ${item.color}`} />
 
-        <div className="grid lg:grid-cols-3 gap-6 mt-10">
-
-          <div className="card">
-
-            <CalendarDays className="text-indigo-600" />
-
-            <h2 className="text-2xl font-bold mt-4">
-              Today's Tasks
-            </h2>
-
-            <p className="text-5xl font-bold mt-4">
-              8
-            </p>
-
-          </div>
-
-          <div className="card">
-
-            <Flame className="text-orange-500" />
-
-            <h2 className="text-2xl font-bold mt-4">
-              Study Streak
-            </h2>
-
-            <p className="text-5xl font-bold mt-4">
-              14 🔥
-            </p>
-
-          </div>
-
-          <div className="card">
-
-            <Clock3 className="text-green-600" />
-
-            <h2 className="text-2xl font-bold mt-4">
-              Planned Hours
-            </h2>
-
-            <p className="text-5xl font-bold mt-4">
-              6h
-            </p>
-
-          </div>
-
-        </div>
-
-        {/* Weekly Planner */}
-
-        <div className="card mt-10">
-
-          <div className="flex justify-between items-center mb-8">
-
-            <h2 className="text-2xl font-bold">
-              Today's Schedule
-            </h2>
-
-            <button className="flex gap-2 items-center bg-gray-100 px-4 py-2 rounded-lg">
-
-              <Plus size={18} />
-
-              Add Task
-
-            </button>
-
-          </div>
-
-          <div className="space-y-5">
-
-            {schedule.map((item) => (
-
-              <div
-                key={item.time}
-                className="flex justify-between items-center border rounded-xl p-5 hover:shadow-md transition"
-              >
-
-                <div className="flex gap-5 items-center">
-
-                  <div
-                    className={`w-4 h-16 rounded-full ${item.color}`}
-                  />
-
-                  <div>
-
-                    <h3 className="text-xl font-semibold">
-
-                      {item.subject}
-
-                    </h3>
-
-                    <p className="text-gray-500">
-
-                      {item.time}
-
-                    </p>
-
-                  </div>
-
+                <div>
+                  <h3 className="text-sm font-semibold">{item.subject}</h3>
+                  <p className="text-luna-100/50 text-xs mt-0.5">
+                    {item.time}
+                  </p>
                 </div>
-
-                <button className="bg-indigo-100 text-indigo-700 px-5 py-2 rounded-lg">
-
-                  Edit
-
-                </button>
-
               </div>
 
-            ))}
-
-          </div>
-
+              <button className="bg-luna-100/10 text-luna-100 text-xs font-semibold px-4 py-1.5 rounded-full hover:bg-luna-100/20 transition">
+                Edit
+              </button>
+            </div>
+          ))}
         </div>
+      </div>
 
-        {/* Bottom */}
+      {/* Bottom */}
+      <div className="grid lg:grid-cols-2 gap-5 mt-5">
+        {/* Upcoming */}
+        <div className="card">
+          <h2 className="text-base font-bold mb-3">Upcoming Deadlines</h2>
 
-        <div className="grid lg:grid-cols-2 gap-8 mt-10">
-
-          {/* Upcoming */}
-
-          <div className="card">
-
-            <h2 className="text-2xl font-bold mb-6">
-              Upcoming Deadlines
-            </h2>
-
-            <div className="space-y-4">
-
-              <div className="border-l-4 border-red-500 pl-4">
-
-                <h3 className="font-semibold">
-                  DBMS Assignment
-                </h3>
-
-                <p className="text-gray-500">
-                  Due Tomorrow
-                </p>
-
-              </div>
-
-              <div className="border-l-4 border-yellow-500 pl-4">
-
-                <h3 className="font-semibold">
-                  CN Quiz
-                </h3>
-
-                <p className="text-gray-500">
-                  2 Days Left
-                </p>
-
-              </div>
-
-              <div className="border-l-4 border-green-500 pl-4">
-
-                <h3 className="font-semibold">
-                  OS Lab
-                </h3>
-
-                <p className="text-gray-500">
-                  Friday
-                </p>
-
-              </div>
-
+          <div className="space-y-3">
+            <div className="border-l-4 border-red-400 pl-3">
+              <h3 className="text-sm font-semibold">DBMS Assignment</h3>
+              <p className="text-luna-100/50 text-xs mt-0.5">Due Tomorrow</p>
             </div>
 
+            <div className="border-l-4 border-amber-400 pl-3">
+              <h3 className="text-sm font-semibold">CN Quiz</h3>
+              <p className="text-luna-100/50 text-xs mt-0.5">2 Days Left</p>
+            </div>
+
+            <div className="border-l-4 border-emerald-400 pl-3">
+              <h3 className="text-sm font-semibold">OS Lab</h3>
+              <p className="text-luna-100/50 text-xs mt-0.5">Friday</p>
+            </div>
           </div>
-
-          {/* AI Card */}
-
-          <div className="gradient rounded-3xl text-white p-8">
-
-            <Sparkles size={40} />
-
-            <h2 className="text-3xl font-bold mt-6">
-
-              AI Recommendation
-
-            </h2>
-
-            <p className="mt-5 leading-8">
-
-              Based on your progress, spend
-              <strong> 90 more minutes</strong> on
-              DBMS this week.
-
-              <br />
-              <br />
-
-              Your readiness score could improve
-              from <strong>78%</strong> to
-              <strong>86%</strong>.
-
-            </p>
-
-            <button className="mt-8 bg-white text-indigo-700 font-semibold px-6 py-3 rounded-xl">
-
-              Regenerate Plan
-
-            </button>
-
-          </div>
-
         </div>
 
-      </main>
+        {/* AI Card */}
+        <div className="gradient rounded-2xl text-white p-5">
+          <Sparkles size={26} />
 
-    </div>
+          <h2 className="text-base font-bold mt-3">AI Recommendation</h2>
+
+          <p className="mt-2.5 text-sm leading-6 text-white/90">
+            Based on your progress, spend <strong>90 more minutes</strong> on
+            DBMS this week. Your readiness score could improve from{" "}
+            <strong>78%</strong> to <strong>86%</strong>.
+          </p>
+
+          <button className="mt-4 bg-white text-luna-400 text-sm font-semibold px-4 py-2 rounded-full">
+            Regenerate Plan
+          </button>
+        </div>
+      </div>
+    </AppShell>
   );
 }
