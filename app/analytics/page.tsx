@@ -1,133 +1,76 @@
 "use client";
-
 import AppShell from "@/components/AppShell";
-
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-} from "recharts";
-
-const weekly = [
-  { day: "Mon", hours: 2 },
-  { day: "Tue", hours: 4 },
-  { day: "Wed", hours: 3 },
-  { day: "Thu", hours: 5 },
-  { day: "Fri", hours: 4 },
-  { day: "Sat", hours: 6 },
-  { day: "Sun", hours: 3 },
-];
-
-const pie = [
-  { name: "Completed", value: 78 },
-  { name: "Remaining", value: 22 },
-];
-
-const COLORS = ["#54ACBF", "rgba(167,235,242,0.15)"];
-
+import { useStudy } from "@/context/StudyContext";
+import { studyMetrics } from "@/lib/study";
+import { ResponsiveContainer, BarChart, Bar, XAxis, Tooltip } from "recharts";
 export default function Analytics() {
+  const { data } = useStudy();
+  const m = studyMetrics(data);
   return (
     <AppShell
-      title="Analytics"
-      subtitle="Monitor your study habits and readiness."
+      title="Analytics & Readiness"
+      subtitle="Progress based on your recorded study activity."
     >
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid sm:grid-cols-3 gap-4">
         <div className="card">
-          <h2 className="text-sm font-semibold text-luna-100/60">
-            Study Hours
-          </h2>
-          <p className="text-2xl font-bold mt-2">32h</p>
+          <p>Focused hours</p>
+          <p className="text-2xl font-bold mt-2">
+            {(m.minutes / 60).toFixed(1)}h
+          </p>
         </div>
-
         <div className="card">
-          <h2 className="text-sm font-semibold text-luna-100/60">
-            Focus Score
-          </h2>
-          <p className="text-2xl font-bold mt-2">91%</p>
+          <p>Quiz accuracy</p>
+          <p className="text-2xl font-bold mt-2">
+            {data.attempts.length ? `${m.quiz}%` : "No attempts"}
+          </p>
         </div>
-
         <div className="card">
-          <h2 className="text-sm font-semibold text-luna-100/60">
-            Exam Readiness
-          </h2>
-          <p className="text-2xl font-bold mt-2 text-emerald-400">78%</p>
+          <p>Readiness estimate</p>
+          <p className="text-2xl font-bold mt-2">{m.readiness}%</p>
         </div>
       </div>
-
-      <div className="grid lg:grid-cols-2 gap-5 mt-5">
-        <div className="card">
-          <h2 className="text-base font-bold mb-3">Weekly Study Hours</h2>
-
-          <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={weekly}>
-              <XAxis
-                dataKey="day"
-                stroke="#A7EBF2"
-                opacity={0.5}
-                fontSize={11}
-              />
-              <Tooltip
-                contentStyle={{
-                  background: "#023859",
-                  border: "1px solid rgba(167,235,242,0.2)",
-                  borderRadius: 12,
-                  color: "#EAF6FB",
-                  fontSize: 12,
-                }}
-              />
-              <Bar dataKey="hours" fill="#54ACBF" radius={[6, 6, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div className="card">
-          <h2 className="text-base font-bold mb-3">Readiness</h2>
-
-          <ResponsiveContainer width="100%" height={200}>
-            <PieChart>
-              <Pie
-                data={pie}
-                innerRadius={55}
-                outerRadius={85}
-                dataKey="value"
-              >
-                {pie.map((entry, index) => (
-                  <Cell key={index} fill={COLORS[index]} />
-                ))}
-              </Pie>
-              <Tooltip
-                contentStyle={{
-                  background: "#023859",
-                  border: "1px solid rgba(167,235,242,0.2)",
-                  borderRadius: 12,
-                  color: "#EAF6FB",
-                  fontSize: 12,
-                }}
-              />
-            </PieChart>
-          </ResponsiveContainer>
-
-          <div className="text-center">
-            <h1 className="text-2xl font-bold">78%</h1>
-            <p className="text-luna-100/60 text-xs">Course Completed</p>
-          </div>
-        </div>
-      </div>
-
       <div className="card mt-5">
-        <h2 className="text-base font-bold mb-3">AI Insights</h2>
-
-        <ul className="space-y-2.5 text-sm text-luna-100/80">
-          <li>✅ You&apos;re studying consistently 5 days a week.</li>
-          <li>📈 Increase DBMS practice by 2 hours.</li>
-          <li>🎯 Complete CN revision before Friday.</li>
-          <li>🔥 Maintain your 14-day study streak.</li>
-        </ul>
+        <h2 className="font-bold mb-4">Focused hours · Last 7 days</h2>
+        <ResponsiveContainer width="100%" height={240}>
+          <BarChart data={m.weekly}>
+            <XAxis dataKey="day" stroke="#8b778f" />
+            <Tooltip
+              contentStyle={{ background: "#faf7f1", borderRadius: 12 }}
+            />
+            <Bar dataKey="hours" fill="#9a809f" radius={[6, 6, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+      <div className="card mt-5 space-y-3">
+        <h2 className="font-bold">How readiness is estimated</h2>
+        <p className="text-sm text-muted">
+          Task completion contributes 40%, quiz accuracy 35%, the last 7
+          days&apos; study time against your daily goal 15%, and active days
+          10%. Missing activity contributes zero. This is a progress estimate,
+          not a prediction of exam results or syllabus coverage.
+        </p>
+        <p>
+          {m.completion}% of tasks completed · {m.activeDays}/7 active days ·{" "}
+          {m.streak} day streak
+        </p>
+      </div>
+      <div className="card mt-5 space-y-3">
+        <h2 className="font-bold">Quiz history</h2>
+        {!data.attempts.length && (
+          <p className="text-sm text-muted">
+            Complete a quiz to track your performance.
+          </p>
+        )}
+        {[...data.attempts].reverse().map((a) => (
+          <p key={a.id}>
+            {data.subjects.find((s) => s.id === a.subjectId)?.name ??
+              "Deleted subject"}
+            : {a.correct}/{a.total}
+            <span className="block text-xs text-muted">
+              {new Date(a.completedAt).toLocaleString()}
+            </span>
+          </p>
+        ))}
       </div>
     </AppShell>
   );

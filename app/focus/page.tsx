@@ -1,147 +1,172 @@
 "use client";
-
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import AppShell from "@/components/AppShell";
-import {
-  Play,
-  Pause,
-  RotateCcw,
-  Flame,
-  Clock3,
-  Target,
-  Coffee,
-} from "lucide-react";
-
+import { useStudy } from "@/context/StudyContext";
+import { studyMetrics } from "@/lib/study";
 export default function FocusPage() {
+  const { data, update } = useStudy();
+  const [subjectId, setSubjectId] = useState(data.subjects[0]?.id ?? "");
+  const [duration, setDuration] = useState(25);
   const [seconds, setSeconds] = useState(25 * 60);
   const [running, setRunning] = useState(false);
-
+  const [hasSession, setHasSession] = useState(false);
+  const [notice, setNotice] = useState("");
+  const deadline = useRef(0);
+  const session = useRef<{
+    id: string;
+    subjectId: string;
+    minutes: number;
+  } | null>(null);
+  const m = studyMetrics(data);
   useEffect(() => {
-    let timer: NodeJS.Timeout;
-
-    if (running && seconds > 0) {
-      timer = setInterval(() => {
-        setSeconds((prev) => prev - 1);
-      }, 1000);
-    }
-
+    if (!running) return;
+    const tick = () => {
+      const remaining = Math.max(
+        0,
+        Math.ceil((deadline.current - Date.now()) / 1000),
+      );
+      setSeconds(remaining);
+      if (remaining === 0 && session.current) {
+        const completed = session.current;
+        session.current = null;
+        setHasSession(false);
+        setRunning(false);
+        update((d) =>
+          d.sessions.some((s) => s.id === completed.id)
+            ? d
+            : {
+                ...d,
+                sessions: [
+                  ...d.sessions,
+                  { ...completed, completedAt: new Date().toISOString() },
+                ],
+              },
+        );
+        setNotice(
+          "Session saved. Take a 5-minute break before starting another.",
+        );
+      }
+    };
+    tick();
+    const timer = setInterval(tick, 250);
     return () => clearInterval(timer);
-  }, [running, seconds]);
-
-  const minutes = String(Math.floor(seconds / 60)).padStart(2, "0");
-  const secs = String(seconds % 60).padStart(2, "0");
-
+  }, [running, update]);
+  function start() {
+    if (!subjectId || running) return;
+    const remaining = seconds || duration * 60;
+    if (!session.current)
+      session.current = {
+        id: crypto.randomUUID(),
+        subjectId,
+        minutes: duration,
+      };
+    deadline.current = Date.now() + remaining * 1000;
+    setHasSession(true);
+    setSeconds(remaining);
+    setRunning(true);
+    setNotice("");
+  }
+  function reset() {
+    setRunning(false);
+    setSeconds(duration * 60);
+    session.current = null;
+    setHasSession(false);
+    setNotice("Timer reset. Incomplete sessions are not recorded.");
+  }
   return (
     <AppShell
       title="Focus Mode"
-      subtitle="Stay productive using the Pomodoro technique."
+      subtitle="Finish a focused session to record your study time."
     >
-      {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="card text-center">
-          <Clock3 className="mx-auto text-luna-100" size={24} />
-          <h2 className="mt-2.5 text-sm font-semibold text-luna-100/60">
-            Focus Time
-          </h2>
-          <p className="text-xl font-bold mt-1">2h 35m</p>
+      <div className="grid sm:grid-cols-3 gap-4">
+        <div className="card">
+          Focused time<p className="text-2xl mt-2">{m.minutes} min</p>
         </div>
-
-        <div className="card text-center">
-          <Target className="mx-auto text-emerald-400" size={24} />
-          <h2 className="mt-2.5 text-sm font-semibold text-luna-100/60">
-            Sessions
-          </h2>
-          <p className="text-xl font-bold mt-1">5</p>
+        <div className="card">
+          Completed sessions
+          <p className="text-2xl mt-2">{data.sessions.length}</p>
         </div>
-
-        <div className="card text-center">
-          <Flame className="mx-auto text-amber-500" size={24} />
-          <h2 className="mt-2.5 text-sm font-semibold text-luna-100/60">
-            Streak
-          </h2>
-          <p className="text-xl font-bold mt-1">14 Days</p>
-        </div>
-
-        <div className="card text-center">
-          <Coffee className="mx-auto text-amber-300" size={24} />
-          <h2 className="mt-2.5 text-sm font-semibold text-luna-100/60">
-            Breaks
-          </h2>
-          <p className="text-xl font-bold mt-1">3</p>
+        <div className="card">
+          Study streak<p className="text-2xl mt-2">{m.streak} days</p>
         </div>
       </div>
-
-      {/* Timer */}
-      <div className="card mt-5 text-center py-8">
-        <h2 className="text-lg font-bold">Pomodoro Timer</h2>
-
-        <div className="mt-6 w-52 h-52 mx-auto rounded-full border-[10px] border-luna-200 flex items-center justify-center shadow-lg">
-          <span className="text-4xl font-bold">
-            {minutes}:{secs}
-          </span>
+      <div className="card mt-5 max-w-xl mx-auto space-y-5 text-center">
+        <h2 className="text-lg font-bold">Pomodoro timer</h2>
+        <label className="block text-sm text-left">
+          Study subject
+          <select
+            className="field"
+            disabled={hasSession || running}
+            value={subjectId}
+            onChange={(e) => setSubjectId(e.target.value)}
+          >
+            <option value="" disabled>
+              Select a subject
+            </option>
+            {data.subjects.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="block text-sm text-left">
+          Session length
+          <select
+            className="field"
+            disabled={running || hasSession}
+            value={duration}
+            onChange={(e) => {
+              const value = Number(e.target.value);
+              setDuration(value);
+              setSeconds(value * 60);
+            }}
+          >
+            <option value={15}>15 minutes</option>
+            <option value={25}>25 minutes</option>
+            <option value={50}>50 minutes</option>
+          </select>
+        </label>
+        <div role="timer" className="text-6xl font-bold py-8 tabular-nums">
+          {String(Math.floor(seconds / 60)).padStart(2, "0")}:
+          {String(seconds % 60).padStart(2, "0")}
         </div>
-
-        <div className="flex justify-center gap-3 mt-8 flex-wrap">
+        <div className="flex gap-3 justify-center">
           <button
-            onClick={() => setRunning(true)}
-            className="bg-emerald-500 text-white text-sm font-semibold px-5 py-2.5 rounded-full flex items-center gap-2"
+            className="action"
+            onClick={start}
+            disabled={!subjectId || running}
           >
-            <Play size={15} />
-            Start
+            {hasSession ? "Resume" : "Start"}
           </button>
-
           <button
-            onClick={() => setRunning(false)}
-            className="bg-amber-500 text-white text-sm font-semibold px-5 py-2.5 rounded-full flex items-center gap-2"
+            className="action"
+            disabled={!running}
+            onClick={() => {
+              setSeconds(
+                Math.max(0, Math.ceil((deadline.current - Date.now()) / 1000)),
+              );
+              setRunning(false);
+            }}
           >
-            <Pause size={15} />
             Pause
           </button>
-
-          <button
-            onClick={() => {
-              setRunning(false);
-              setSeconds(25 * 60);
-            }}
-            className="bg-red-500 text-white text-sm font-semibold px-5 py-2.5 rounded-full flex items-center gap-2"
-          >
-            <RotateCcw size={15} />
+          <button className="action" onClick={reset}>
             Reset
           </button>
         </div>
-      </div>
-
-      {/* Bottom */}
-      <div className="grid lg:grid-cols-2 gap-5 mt-5">
-        {/* Focus Score */}
-        <div className="card">
-          <h2 className="text-base font-bold">Today&apos;s Focus Score</h2>
-
-          <div className="mt-5 flex items-center justify-center">
-            <div className="w-36 h-36 rounded-full border-[10px] border-emerald-400 flex items-center justify-center">
-              <div className="text-center">
-                <h1 className="text-3xl font-bold text-emerald-400">91%</h1>
-                <p className="text-luna-100/60 text-xs mt-1">Excellent</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Ambient Sounds */}
-        <div className="card">
-          <h2 className="text-base font-bold">Ambient Sounds</h2>
-
-          <div className="grid grid-cols-2 gap-3 mt-5">
-            {["🌧 Rain", "☕ Cafe", "🌲 Forest", "🌊 Ocean"].map((sound) => (
-              <button
-                key={sound}
-                className="bg-white/5 hover:bg-white/10 border border-luna-100/10 rounded-xl py-4 text-sm font-semibold transition"
-              >
-                {sound}
-              </button>
-            ))}
-          </div>
-        </div>
+        {!data.subjects.length && (
+          <p className="text-sm">Add a subject in the planner first.</p>
+        )}
+        {notice && (
+          <p role="status" className="text-sm text-luna-100">
+            {notice}
+          </p>
+        )}
+        <p className="text-xs text-muted">
+          The timer accounts for background tabs. Stay on this page; leaving or
+          reloading cancels an incomplete session.
+        </p>
       </div>
     </AppShell>
   );

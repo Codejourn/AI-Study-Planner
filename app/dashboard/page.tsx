@@ -1,211 +1,413 @@
 "use client";
-
+import { useState } from "react";
+import Link from "next/link";
 import AppShell from "@/components/AppShell";
-import StatCard from "@/components/StatCard";
-import { tasks } from "@/lib/dummyData";
-import { Calendar, Clock, Sparkles, BookOpen, Flame, Target } from "lucide-react";
-
+import { useStudy } from "@/context/StudyContext";
+import { localDate, studyMetrics } from "@/lib/study";
 import {
-  ResponsiveContainer,
-  AreaChart,
-  Area,
-  XAxis,
-  Tooltip,
-} from "recharts";
+  ArrowUpRight,
+  BookOpen,
+  ChevronLeft,
+  ChevronRight,
+  Clock3,
+  FileText,
+  MoreHorizontal,
+  Plus,
+  Sparkles,
+} from "lucide-react";
 
-const data = [
-  { day: "Mon", hours: 2 },
-  { day: "Tue", hours: 3 },
-  { day: "Wed", hours: 4 },
-  { day: "Thu", hours: 5 },
-  { day: "Fri", hours: 3 },
-  { day: "Sat", hours: 6 },
-  { day: "Sun", hours: 4 },
-];
-
-export default function Dashboard() {
+function ProgressCard({
+  label,
+  value,
+  color,
+  detail,
+}: {
+  label: string;
+  value: number;
+  color: string;
+  detail: string;
+}) {
   return (
-    <AppShell title="Dashboard" subtitle="Let's make today productive.">
-      {/* Hero */}
-      <div className="card flex items-center justify-between gap-6 flex-wrap bg-linear-to-br from-luna-300/60 to-luna-400/60">
-        <div>
-          <h2 className="text-xl font-bold">Good Evening 👋</h2>
-          <p className="text-luna-100/60 text-sm mt-1">
-            You have 3 sessions planned today.
-          </p>
-        </div>
-
-        <button className="flex items-center gap-2 bg-linear-to-br from-luna-200 to-luna-300 text-white text-sm font-semibold px-5 py-2.5 rounded-full hover:brightness-110 transition">
-          <Sparkles size={15} />
-          Generate New Plan
-        </button>
+    <div className="progress-card">
+      <h2>{label}</h2>
+      <div className="progress-ring">
+        <svg viewBox="0 0 120 120" aria-hidden="true">
+          <circle
+            cx="60"
+            cy="60"
+            r="39"
+            fill="none"
+            stroke="#ffffff17"
+            strokeWidth="6"
+          />
+          <circle
+            cx="60"
+            cy="60"
+            r="39"
+            fill="none"
+            stroke={color}
+            strokeWidth="6"
+            strokeLinecap="round"
+            strokeDasharray={`${(value / 100) * 245.04} 245.04`}
+          />
+        </svg>
+        <span>{value}%</span>
       </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-5">
-        <StatCard
-          icon={BookOpen}
-          iconClass="bg-luna-300"
-          title="Subjects"
-          value="6"
-          delta="+1 this week"
-        />
-        <StatCard
-          icon={Clock}
-          iconClass="bg-rose-500"
-          title="Study Hours"
-          value="32h"
-          delta="+6.2 this week"
-        />
-        <StatCard
-          icon={Target}
-          iconClass="bg-amber-500"
-          title="Tasks Done"
-          value="84%"
-          delta="+8% this week"
-        />
-        <StatCard
-          icon={Flame}
-          iconClass="bg-luna-200"
-          title="Readiness"
-          value="78%"
-          delta="+3% this week"
-        />
-      </div>
-
-      {/* Middle */}
-      <div className="grid lg:grid-cols-3 gap-5 mt-5">
-        {/* Today's Plan */}
-        <div className="card lg:col-span-2">
-          <div className="flex items-center gap-2 mb-4">
-            <Calendar size={17} className="text-luna-100" />
-            <h2 className="text-base font-bold">Today&apos;s Study Plan</h2>
-          </div>
-
-          <div className="space-y-2.5">
-            {tasks.map((task) => (
-              <div
-                key={task.subject}
-                className="flex justify-between items-center border border-luna-100/10 rounded-xl px-4 py-3 hover:bg-white/5 transition"
-              >
-                <div>
-                  <h3 className="font-semibold text-sm">{task.subject}</h3>
-                  <p className="text-luna-100/50 text-xs mt-0.5">
-                    {task.time}
-                  </p>
-                </div>
-
-                <button className="bg-emerald-500 text-white text-xs font-semibold px-3.5 py-1.5 rounded-lg">
-                  Start
-                </button>
+      <p>{detail}</p>
+    </div>
+  );
+}
+export default function Dashboard() {
+  const { data, update } = useStudy();
+  const metrics = studyMetrics(data);
+  const [month, setMonth] = useState(
+    () => new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+  );
+  const [selected, setSelected] = useState(localDate());
+  const tasks = data.tasks.filter((t) => t.date === selected);
+  const exams = [...data.subjects]
+    .filter((s) => s.examDate >= localDate())
+    .sort((a, b) => a.examDate.localeCompare(b.examDate));
+  const offset = (month.getDay() + 6) % 7;
+  const days = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
+  function moveMonth(amount: number) {
+    setMonth((m) => new Date(m.getFullYear(), m.getMonth() + amount, 1));
+  }
+  return (
+    <AppShell title="Dashboard">
+      <div className="dashboard-layout">
+        <div className="dashboard-main">
+          <div className="dashboard-top">
+            <section className="panel">
+              <div className="panel-heading">
+                <h2>Your subjects</h2>
+                <Link
+                  href="/planner"
+                  aria-label="Add a subject"
+                  className="text-[#8a718e]"
+                >
+                  <Plus size={17} />
+                </Link>
               </div>
-            ))}
+              {data.subjects.length ? (
+                data.subjects.slice(0, 3).map((s, i) => (
+                  <Link href="/planner" key={s.id} className="subject-row">
+                    <span className={`subject-icon ${["", "rose", "gold"][i]}`}>
+                      <BookOpen size={16} strokeWidth={1.5} />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold truncate">{s.name}</p>
+                      <p className="text-[10px] text-muted mt-0.5">
+                        {
+                          [
+                            "",
+                            "A little at a time",
+                            "Keep the momentum",
+                            "Your current priority",
+                          ][s.priority]
+                        }
+                      </p>
+                    </div>
+                    <span className="row-action">
+                      <MoreHorizontal size={15} />
+                    </span>
+                  </Link>
+                ))
+              ) : (
+                <div className="empty-state">
+                  <BookOpen size={24} className="mb-2 text-[#9b859f]" />
+                  Your next chapter starts here.
+                  <br />
+                  Add a subject and make it your own.
+                </div>
+              )}
+              <Link href="/planner" className="panel-link justify-end mt-2">
+                All subjects <ArrowUpRight size={12} />
+              </Link>
+            </section>
+            <section className="panel">
+              <div className="panel-heading">
+                <h2>Coming up next</h2>
+                <span className="eyebrow text-[8px]!">Exams</span>
+              </div>
+              {exams.length ? (
+                exams.slice(0, 3).map((s, i) => (
+                  <Link href="/planner" className="exam-row" key={s.id}>
+                    <span className={`subject-icon ${i % 2 ? "gold" : ""}`}>
+                      <span className="text-sm font-medium">
+                        {new Date(`${s.examDate}T12:00:00`).getDate()}
+                      </span>
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold truncate">{s.name}</p>
+                      <p className="text-[10px] text-muted mt-0.5">
+                        {new Date(`${s.examDate}T12:00:00`).toLocaleDateString(
+                          "en",
+                          { month: "short", day: "numeric" },
+                        )}{" "}
+                        ·{" "}
+                        {Math.max(
+                          0,
+                          Math.round(
+                            (Date.parse(s.examDate) - Date.parse(localDate())) /
+                              86400000,
+                          ),
+                        )}{" "}
+                        days to go
+                      </p>
+                    </div>
+                  </Link>
+                ))
+              ) : (
+                <div className="empty-state">
+                  <Sparkles size={24} className="mb-2 text-[#9b859f]" />A clear
+                  plan feels better.
+                  <br />
+                  Add your exam dates to see what&apos;s ahead.
+                </div>
+              )}
+              <Link href="/planner" className="panel-link justify-end mt-2">
+                See your plan <ArrowUpRight size={12} />
+              </Link>
+            </section>
+          </div>
+          <section className="panel">
+            <div className="panel-heading">
+              <h2>My study schedule</h2>
+              <Link href="/planner" className="panel-link">
+                Open planner <ArrowUpRight size={12} />
+              </Link>
+            </div>
+            <div className="schedule-content">
+              <div className="mini-calendar">
+                <div className="flex items-center justify-between mb-3">
+                  <button
+                    aria-label="Previous month"
+                    onClick={() => moveMonth(-1)}
+                  >
+                    <ChevronLeft size={13} />
+                  </button>
+                  <span className="text-[11px] font-medium">
+                    {month.toLocaleDateString("en", {
+                      month: "long",
+                      year: "numeric",
+                    })}
+                  </span>
+                  <button aria-label="Next month" onClick={() => moveMonth(1)}>
+                    <ChevronRight size={13} />
+                  </button>
+                </div>
+                <div className="calendar-grid">
+                  {["M", "T", "W", "T", "F", "S", "S"].map((d, i) => (
+                    <span key={i} className="text-[9px] text-muted pb-2">
+                      {d}
+                    </span>
+                  ))}
+                  {Array.from({ length: offset }, (_, i) => (
+                    <span key={`blank-${i}`} />
+                  ))}
+                  {Array.from({ length: days }, (_, i) => {
+                    const date = localDate(
+                      new Date(month.getFullYear(), month.getMonth(), i + 1),
+                    );
+                    return (
+                      <button
+                        key={date}
+                        aria-label={date}
+                        aria-pressed={selected === date}
+                        onClick={() => setSelected(date)}
+                        className={`${selected === date ? "selected" : ""} ${date === localDate() ? "today" : ""}`}
+                      >
+                        {i + 1}
+                        {data.tasks.some((t) => t.date === date) && (
+                          <i className="calendar-dot" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div>
+                <div className="flex justify-between items-center mb-3">
+                  <p className="text-[10px] text-muted">
+                    {selected === localDate()
+                      ? "TODAY'S LITTLE STEPS"
+                      : new Date(`${selected}T12:00:00`).toLocaleDateString(
+                          "en",
+                          { month: "long", day: "numeric" },
+                        )}
+                  </p>
+                  <span className="text-[10px] text-muted">
+                    {tasks.length} tasks
+                  </span>
+                </div>
+                {tasks.length ? (
+                  tasks.slice(0, 4).map((t) => (
+                    <label key={t.id} className="schedule-row">
+                      <span className="schedule-date">
+                        {new Date(`${t.date}T12:00:00`).getDate()}
+                      </span>
+                      <span className="flex-1 min-w-0">
+                        <span
+                          className={`block text-xs font-medium truncate ${t.completed ? "line-through opacity-60" : ""}`}
+                        >
+                          {t.title}
+                        </span>
+                        <span className="flex items-center gap-1 text-[10px] text-muted mt-1">
+                          <Clock3 size={10} />
+                          {t.minutes} minutes ·{" "}
+                          {data.subjects.find((s) => s.id === t.subjectId)
+                            ?.name ?? "Study"}
+                        </span>
+                      </span>
+                      <input
+                        type="checkbox"
+                        aria-label={`Complete ${t.title}`}
+                        checked={t.completed}
+                        onChange={() =>
+                          update((d) => ({
+                            ...d,
+                            tasks: d.tasks.map((x) =>
+                              x.id === t.id
+                                ? { ...x, completed: !x.completed }
+                                : x,
+                            ),
+                          }))
+                        }
+                      />
+                    </label>
+                  ))
+                ) : (
+                  <div className="flex flex-col items-center justify-center text-center min-h-[165px]">
+                    <span className="subject-icon gold mb-3">
+                      <BookOpen size={17} />
+                    </span>
+                    <p className="text-xs font-medium">
+                      A little planning goes a long way.
+                    </p>
+                    <p className="text-[11px] text-muted mt-2 max-w-48">
+                      Give your day a direction with a study plan.
+                    </p>
+                    <Link href="/planner" className="panel-link mt-4">
+                      Plan this day <ArrowUpRight size={12} />
+                    </Link>
+                  </div>
+                )}
+                {tasks.length > 4 && (
+                  <Link href="/planner" className="panel-link justify-end">
+                    View all {tasks.length} tasks <ArrowUpRight size={12} />
+                  </Link>
+                )}
+              </div>
+            </div>
+          </section>
+          <section className="panel">
+            <div className="panel-heading">
+              <h2>A space to learn</h2>
+              <span className="text-[10px] text-muted">
+                Choose your next step
+              </span>
+            </div>
+            <div className="tool-grid">
+              <Link href="/notes" className="group">
+                <div className="tool-art notes">
+                  <div className="paper">
+                    <i />
+                    <i />
+                    <i />
+                    <i />
+                  </div>
+                  <FileText
+                    size={16}
+                    className="absolute right-5 bottom-4 text-[#7e6283]"
+                  />
+                </div>
+                <div className="flex justify-between items-center mt-2.5">
+                  <div>
+                    <p className="text-xs font-medium">
+                      Your notes, made clearer
+                    </p>
+                    <p className="text-[10px] text-muted mt-1">
+                      {data.notes.length} saved notes · Notes assistant
+                    </p>
+                  </div>
+                  <ArrowUpRight size={14} className="text-muted" />
+                </div>
+              </Link>
+              <Link href="/focus">
+                <div className="tool-art">
+                  <div className="art-clock" />
+                  <span className="absolute left-5 bottom-3 text-[9px] uppercase tracking-[.2em] text-[#65775e]">
+                    One thing at a time
+                  </span>
+                </div>
+                <div className="flex justify-between items-center mt-2.5">
+                  <div>
+                    <p className="text-xs font-medium">A moment of focus</p>
+                    <p className="text-[10px] text-muted mt-1">
+                      A quiet space for your next 25 minutes
+                    </p>
+                  </div>
+                  <ArrowUpRight size={14} className="text-muted" />
+                </div>
+              </Link>
+            </div>
+          </section>
+          <div className="study-summary">
+            <div>
+              <p className="eyebrow text-[8px]! mb-1">Time well spent</p>
+              <strong>
+                {(metrics.minutes / 60).toFixed(1)}
+                <span className="text-xs text-muted ml-1">focused hours</span>
+              </strong>
+            </div>
+            <div>
+              <p className="eyebrow text-[8px]! mb-1">Showing up</p>
+              <strong>
+                {metrics.activeDays}
+                <span className="text-xs text-muted ml-1">days this week</span>
+              </strong>
+            </div>
+            <Link href="/quiz" className="panel-link">
+              Put your knowledge to the test <ArrowUpRight size={13} />
+            </Link>
           </div>
         </div>
-
-        {/* AI Suggestion */}
-        <div className="card gradient text-white">
-          <Sparkles size={26} />
-          <h2 className="text-base font-bold mt-3">AI Suggestion</h2>
-
-          <p className="mt-3 text-sm leading-6 text-white/90">
-            You&apos;re spending more time on DSA. Increase DBMS practice this
-            week to improve exam readiness by 8%.
+        <aside className="progress-rail" aria-label="Study progress">
+          <ProgressCard
+            label="Tasks completed"
+            value={metrics.completion}
+            color="#dfa1b4"
+            detail={`${data.tasks.filter((t) => t.completed).length} of ${data.tasks.length} little steps`}
+          />
+          <ProgressCard
+            label="Quiz accuracy"
+            value={metrics.quiz}
+            color="#b4d6cf"
+            detail={
+              data.attempts.length
+                ? `${data.attempts.length} practice attempts`
+                : "Your first quiz is waiting"
+            }
+          />
+          <ProgressCard
+            label="Exam readiness"
+            value={metrics.readiness}
+            color="#f2d68d"
+            detail="A reflection of your progress"
+          />
+          <Link
+            href="/analytics"
+            className="rail-footer panel-link justify-center py-2"
+          >
+            See the bigger picture <ArrowUpRight size={13} />
+          </Link>
+          <p className="rail-footer text-[9px] text-muted text-center leading-relaxed px-2 pb-1">
+            Progress, not perfection.
+            <br />
+            Readiness is an estimate, not a prediction.
           </p>
-
-          <button className="mt-4 bg-white text-luna-400 text-sm font-semibold px-4 py-2 rounded-full">
-            Generate New Plan
-          </button>
-        </div>
-      </div>
-
-      {/* Bottom */}
-      <div className="grid lg:grid-cols-3 gap-5 mt-5">
-        {/* Chart */}
-        <div className="card lg:col-span-2">
-          <h2 className="text-base font-bold mb-3">Weekly Study Hours</h2>
-
-          <ResponsiveContainer width="100%" height={220}>
-            <AreaChart data={data}>
-              <defs>
-                <linearGradient id="colorHours" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#54ACBF" stopOpacity={0.8} />
-                  <stop offset="95%" stopColor="#54ACBF" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-
-              <XAxis
-                dataKey="day"
-                stroke="#A7EBF2"
-                opacity={0.5}
-                fontSize={11}
-              />
-              <Tooltip
-                contentStyle={{
-                  background: "#023859",
-                  border: "1px solid rgba(167,235,242,0.2)",
-                  borderRadius: 12,
-                  color: "#EAF6FB",
-                  fontSize: 12,
-                }}
-              />
-
-              <Area
-                type="monotone"
-                dataKey="hours"
-                stroke="#54ACBF"
-                fillOpacity={1}
-                fill="url(#colorHours)"
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* Upcoming */}
-        <div className="card">
-          <div className="flex items-center gap-2 mb-3">
-            <Clock size={17} className="text-luna-100" />
-            <h2 className="text-base font-bold">Upcoming Exams</h2>
-          </div>
-
-          <div className="space-y-2.5">
-            <div className="border border-luna-100/10 rounded-xl px-4 py-2.5">
-              <h3 className="font-semibold text-sm">DBMS</h3>
-              <p className="text-luna-100/50 text-xs mt-0.5">12 July</p>
-            </div>
-
-            <div className="border border-luna-100/10 rounded-xl px-4 py-2.5">
-              <h3 className="font-semibold text-sm">Operating Systems</h3>
-              <p className="text-luna-100/50 text-xs mt-0.5">18 July</p>
-            </div>
-
-            <div className="border border-luna-100/10 rounded-xl px-4 py-2.5">
-              <h3 className="font-semibold text-sm">Computer Networks</h3>
-              <p className="text-luna-100/50 text-xs mt-0.5">25 July</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Goal */}
-      <div className="card mt-5 flex items-center justify-between flex-wrap gap-4">
-        <div>
-          <div className="flex gap-2 items-center">
-            <Target size={16} className="text-emerald-400" />
-            <h2 className="text-base font-bold">Daily Goal</h2>
-          </div>
-
-          <p className="text-luna-100/60 text-sm mt-1.5">
-            Complete 5 study sessions today.
-          </p>
-        </div>
-
-        <div className="w-20 h-20 rounded-full bg-emerald-400/10 border border-emerald-400/20 flex items-center justify-center">
-          <div className="text-center">
-            <h1 className="text-xl font-bold text-emerald-400">80%</h1>
-            <p className="text-[10px] text-luna-100/60">Done</p>
-          </div>
-        </div>
+        </aside>
       </div>
     </AppShell>
   );

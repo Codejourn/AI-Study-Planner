@@ -1,7 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Keep development tooling from adding unrelated instruction files.
+  agentRules: false,
+  devIndicators: false,
 };
 
 export default nextConfig;
