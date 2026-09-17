@@ -152,6 +152,10 @@ Infrastructure commands and configuration are documented in [AWS setup](docs/AWS
 
 The frontend currently runs locally. For Vercel, set the three public environment values, publish the frontend, and update `FrontendOrigin` in the AWS stack to the exact deployed origin. The current API CORS origin is `http://localhost:3000`.
 
+Use the Next.js framework preset, the repository root directory, `npm ci` as the install command, and `npm run build` as the build command. Commit `package-lock.json` together with dependency changes. After fixing an install failure, redeploy with the existing build cache disabled.
+
+If the Vercel bot says a team member must authorize a commit, the project owner must follow the **authorize it** link in the pull request. Check that the commit author's GitHub account is connected to the intended Vercel account. Deployment authorization is separate from dependency installation and cannot be fixed in application code.
+
 Deployment creates billable AWS resources. DynamoDB and S3 are retained when the application stack is deleted; see the cleanup instructions before removing resources.
 
 ## Readiness calculation
