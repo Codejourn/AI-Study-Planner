@@ -33,13 +33,14 @@ interface AuthContextValue {
   signup: (
     email: string,
     password: string,
-    name: string
+    name: string,
   ) => Promise<{ confirmationRequired: boolean }>;
   confirmSignup: (email: string, code: string) => Promise<void>;
   resendCode: (email: string) => Promise<void>;
   logout: () => Promise<void>;
   clearError: () => void;
   getToken: () => Promise<string | null>;
+  startDemo: () => void;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -57,8 +58,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
 
   const refreshUser = useCallback(async () => {
+    await Promise.resolve();
     if (!isCognitoConfigured) {
-      setUser(null);
+      try {
+        setUser(
+          sessionStorage.getItem("focusgeek:demo") === "true"
+            ? { username: "local-demo" }
+            : null,
+        );
+      } catch {
+        setUser(null);
+      }
       setLoading(false);
       return;
     }
@@ -77,7 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    refreshUser();
+    void Promise.resolve().then(refreshUser);
   }, [refreshUser]);
 
   const clearError = () => setError(null);
@@ -85,7 +95,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string) => {
     setError(null);
     try {
-      await amplifySignIn({ username: email, password });
+      const result = await amplifySignIn({ username: email, password });
+      if (!result.isSignedIn)
+        throw new Error(
+          `Additional sign-in step required: ${result.nextStep.signInStep}. Complete this step in Cognito before continuing.`,
+        );
       await refreshUser();
     } catch (err) {
       const msg = messageFor(err, "Failed to sign in.");
@@ -103,8 +117,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         options: { userAttributes: { email, name } },
       });
       return {
-        confirmationRequired:
-          result.nextStep.signUpStep === "CONFIRM_SIGN_UP",
+        confirmationRequired: result.nextStep.signUpStep === "CONFIRM_SIGN_UP",
       };
     } catch (err) {
       const msg = messageFor(err, "Failed to sign up.");
@@ -137,7 +150,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
-      await amplifySignOut();
+      sessionStorage.removeItem("focusgeek:demo");
+      if (user?.username !== "local-demo" && isCognitoConfigured)
+        await amplifySignOut();
     } finally {
       setUser(null);
     }
@@ -168,6 +183,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         logout,
         clearError,
         getToken,
+        startDemo: () => {
+          try {
+            sessionStorage.setItem("focusgeek:demo", "true");
+          } catch {
+            setError(
+              "Session storage is disabled. This local session will end on reload.",
+            );
+          }
+          setUser({ username: "local-demo" });
+        },
       }}
     >
       {children}

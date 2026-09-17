@@ -1,137 +1,347 @@
 "use client";
-
+import { useState } from "react";
 import AppShell from "@/components/AppShell";
-import {
-  CalendarDays,
-  Sparkles,
-  Plus,
-  Flame,
-  Clock3,
-} from "lucide-react";
-
-const schedule = [
-  { time: "9:00 AM", subject: "DSA", color: "bg-luna-200" },
-  { time: "11:00 AM", subject: "DBMS", color: "bg-emerald-500" },
-  { time: "2:00 PM", subject: "Operating Systems", color: "bg-amber-500" },
-  { time: "5:00 PM", subject: "Revision", color: "bg-pink-500" },
-];
+import { useStudy } from "@/context/StudyContext";
+import { generatePlan, localDate, Subject, Task } from "@/lib/study";
+import { apiRequest } from "@/lib/api";
 
 export default function Planner() {
+  const { data, update, cloud } = useStudy();
+  const [generating, setGenerating] = useState(false);
+  const [name, setName] = useState("");
+  const [examDate, setExamDate] = useState("");
+  const [priority, setPriority] = useState(2);
+  const [editing, setEditing] = useState<string | null>(null);
+  const [title, setTitle] = useState("");
+  const [subjectId, setSubjectId] = useState("");
+  const [date, setDate] = useState(localDate());
+  const [minutes, setMinutes] = useState(30);
+  const [notice, setNotice] = useState("");
+  const today = localDate();
+  function saveSubject(e: React.FormEvent) {
+    e.preventDefault();
+    if (!name.trim() || examDate < today) return;
+    const subject: Subject = {
+      id: editing ?? crypto.randomUUID(),
+      name: name.trim(),
+      examDate,
+      priority,
+    };
+    update((d) => ({
+      ...d,
+      subjects: editing
+        ? d.subjects.map((s) => (s.id === editing ? subject : s))
+        : [...d.subjects, subject],
+    }));
+    setEditing(null);
+    setName("");
+    setExamDate("");
+  }
+  function saveTask(e: React.FormEvent) {
+    e.preventDefault();
+    const selected = subjectId || data.subjects[0]?.id;
+    if (!selected || !title.trim()) return;
+    update((d) => ({
+      ...d,
+      tasks: [
+        ...d.tasks,
+        {
+          id: crypto.randomUUID(),
+          subjectId: selected,
+          title: title.trim(),
+          date,
+          minutes,
+          completed: false,
+        },
+      ],
+    }));
+    setTitle("");
+  }
+  async function schedule() {
+    setGenerating(true);
+    try {
+      const plan = cloud
+        ? (
+            await apiRequest<{ tasks: Task[] }>("/planner/generate", {
+              data,
+              today,
+            })
+          ).tasks
+        : generatePlan(data);
+      if (!plan.length) {
+        setNotice(
+          "No study time remains, or no upcoming exams were found. Check your subjects and daily hours.",
+        );
+        return;
+      }
+      update((d) => ({
+        ...d,
+        tasks: [
+          ...d.tasks.filter((t) => t.date !== today || t.completed),
+          ...plan,
+        ],
+      }));
+      setNotice(
+        cloud
+          ? "Bedrock generated your study plan. Save to cloud to keep it across devices."
+          : "Today's unfinished tasks were replaced with a deadline-based plan. This local scheduler does not use AI.",
+      );
+    } catch (error) {
+      setNotice(
+        error instanceof Error
+          ? error.message
+          : "Could not generate a schedule.",
+      );
+    } finally {
+      setGenerating(false);
+    }
+  }
   return (
     <AppShell
       title="Study Planner"
-      subtitle="Organize your day with AI-generated schedules."
+      subtitle="Add your subjects, deadlines, and daily study time."
     >
-      <div className="flex justify-end mb-5">
-        <button className="flex items-center gap-2 bg-linear-to-br from-luna-200 to-luna-300 text-white text-sm font-semibold px-5 py-2.5 rounded-full hover:brightness-110 transition">
-          <Sparkles size={15} />
-          Generate AI Schedule
-        </button>
-      </div>
-
-      {/* Top Cards */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="card">
-          <CalendarDays size={20} className="text-luna-100" />
-          <h2 className="text-sm font-semibold mt-2.5 text-luna-100/60">
-            Today&apos;s Tasks
+      {notice && (
+        <p role="status" className="mb-4 text-sm text-luna-100">
+          {notice}
+        </p>
+      )}
+      <div className="grid lg:grid-cols-2 gap-5">
+        <form className="card space-y-3" onSubmit={saveSubject}>
+          <h2 className="font-bold">
+            {editing ? "Edit subject" : "Add subject"}
           </h2>
-          <p className="text-2xl font-bold mt-1">8</p>
-        </div>
-
-        <div className="card">
-          <Flame size={20} className="text-amber-500" />
-          <h2 className="text-sm font-semibold mt-2.5 text-luna-100/60">
-            Study Streak
-          </h2>
-          <p className="text-2xl font-bold mt-1">14 🔥</p>
-        </div>
-
-        <div className="card">
-          <Clock3 size={20} className="text-emerald-400" />
-          <h2 className="text-sm font-semibold mt-2.5 text-luna-100/60">
-            Planned Hours
-          </h2>
-          <p className="text-2xl font-bold mt-1">6h</p>
-        </div>
-      </div>
-
-      {/* Weekly Planner */}
-      <div className="card mt-5">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-base font-bold">Today&apos;s Schedule</h2>
-
-          <button className="flex gap-1.5 items-center bg-white/5 border border-luna-100/10 text-xs font-semibold px-3.5 py-2 rounded-full hover:bg-white/10 transition">
-            <Plus size={14} />
-            Add Task
-          </button>
-        </div>
-
-        <div className="space-y-2.5">
-          {schedule.map((item) => (
-            <div
-              key={item.time}
-              className="flex justify-between items-center border border-luna-100/10 rounded-xl px-4 py-3 hover:bg-white/5 transition"
+          <label className="block text-sm">
+            Subject name
+            <input
+              className="field"
+              required
+              maxLength={100}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </label>
+          <label className="block text-sm">
+            Exam date
+            <input
+              className="field"
+              type="date"
+              required
+              min={today}
+              value={examDate}
+              onChange={(e) => setExamDate(e.target.value)}
+            />
+          </label>
+          <label className="block text-sm">
+            Priority
+            <select
+              className="field"
+              value={priority}
+              onChange={(e) => setPriority(Number(e.target.value))}
             >
-              <div className="flex gap-4 items-center">
-                <div className={`w-2.5 h-10 rounded-full ${item.color}`} />
-
-                <div>
-                  <h3 className="text-sm font-semibold">{item.subject}</h3>
-                  <p className="text-luna-100/50 text-xs mt-0.5">
-                    {item.time}
-                  </p>
-                </div>
+              <option value={1}>Low</option>
+              <option value={2}>Medium</option>
+              <option value={3}>High</option>
+            </select>
+          </label>
+          <button className="action">Save subject</button>
+          {editing && (
+            <button
+              type="button"
+              className="ml-3 text-sm"
+              onClick={() => {
+                setEditing(null);
+                setName("");
+                setExamDate("");
+              }}
+            >
+              Cancel
+            </button>
+          )}
+        </form>
+        <div className="card space-y-3">
+          <h2 className="font-bold">Your subjects</h2>
+          {!data.subjects.length && (
+            <p className="text-sm text-muted">
+              Add your first subject to start planning.
+            </p>
+          )}
+          {data.subjects.map((s) => (
+            <div
+              key={s.id}
+              className="border-b border-luna-100/10 pb-3 flex justify-between gap-3"
+            >
+              <div>
+                <p className="font-semibold">{s.name}</p>
+                <p className="text-xs text-muted">
+                  Exam: {s.examDate} ·{" "}
+                  {["", "Low", "Medium", "High"][s.priority]} priority
+                </p>
               </div>
-
-              <button className="bg-luna-100/10 text-luna-100 text-xs font-semibold px-4 py-1.5 rounded-full hover:bg-luna-100/20 transition">
-                Edit
+              <div className="flex gap-3 text-sm">
+                <button
+                  onClick={() => {
+                    setEditing(s.id);
+                    setName(s.name);
+                    setExamDate(s.examDate);
+                    setPriority(s.priority);
+                  }}
+                >
+                  Edit
+                </button>
+                <button
+                  className="text-red-700"
+                  onClick={() =>
+                    update((d) => ({
+                      ...d,
+                      subjects: d.subjects.filter((x) => x.id !== s.id),
+                      tasks: d.tasks.filter((t) => t.subjectId !== s.id),
+                    }))
+                  }
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          ))}
+          <label className="block text-sm">
+            Available hours per day
+            <input
+              type="number"
+              min={0.5}
+              max={12}
+              step={0.5}
+              className="field"
+              value={data.dailyHours}
+              onChange={(e) => {
+                const hours = Number(e.target.value);
+                if (hours >= 0.5 && hours <= 12)
+                  update((d) => ({ ...d, dailyHours: hours }));
+              }}
+            />
+          </label>
+          <button
+            className="action"
+            onClick={() => void schedule()}
+            disabled={generating || !data.subjects.length}
+          >
+            {generating
+              ? "Generating..."
+              : cloud
+                ? "Generate AI schedule"
+                : "Generate local schedule"}
+          </button>
+          <p className="text-xs text-muted">
+            Prioritizes closer exams and higher priorities within your daily
+            time budget. Completed tasks are preserved.
+          </p>
+        </div>
+      </div>
+      <form onSubmit={saveTask} className="card mt-5 space-y-3">
+        <h2 className="font-bold">Add a task</h2>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <label className="text-sm">
+            Task
+            <input
+              className="field"
+              required
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+            />
+          </label>
+          <label className="text-sm">
+            Subject
+            <select
+              className="field"
+              required
+              value={subjectId || data.subjects[0]?.id || ""}
+              onChange={(e) => setSubjectId(e.target.value)}
+            >
+              <option value="" disabled>
+                Select subject
+              </option>
+              {data.subjects.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="text-sm">
+            Date
+            <input
+              className="field"
+              required
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+            />
+          </label>
+          <label className="text-sm">
+            Minutes
+            <input
+              className="field"
+              required
+              type="number"
+              min={5}
+              max={720}
+              value={minutes}
+              onChange={(e) => setMinutes(Number(e.target.value))}
+            />
+          </label>
+        </div>
+        <button className="action" disabled={!data.subjects.length}>
+          Add task
+        </button>
+      </form>
+      <div className="card mt-5 space-y-3">
+        <h2 className="font-bold">Study tasks</h2>
+        {!data.tasks.length && (
+          <p className="text-sm text-muted">
+            Generate a plan or add your own task.
+          </p>
+        )}
+        {[...data.tasks]
+          .sort((a, b) => a.date.localeCompare(b.date))
+          .map((t) => (
+            <div
+              key={t.id}
+              className="flex items-center gap-3 border-b border-luna-100/10 pb-3"
+            >
+              <input
+                type="checkbox"
+                aria-label={`Complete ${t.title}`}
+                checked={t.completed}
+                onChange={() =>
+                  update((d) => ({
+                    ...d,
+                    tasks: d.tasks.map((x) =>
+                      x.id === t.id ? { ...x, completed: !x.completed } : x,
+                    ),
+                  }))
+                }
+              />
+              <div className="flex-1">
+                <p className={t.completed ? "line-through opacity-50" : ""}>
+                  {t.title}
+                </p>
+                <p className="text-xs text-muted">
+                  {t.date} · {t.minutes} minutes
+                </p>
+              </div>
+              <button
+                className="text-sm text-red-700"
+                onClick={() =>
+                  update((d) => ({
+                    ...d,
+                    tasks: d.tasks.filter((x) => x.id !== t.id),
+                  }))
+                }
+              >
+                Delete
               </button>
             </div>
           ))}
-        </div>
-      </div>
-
-      {/* Bottom */}
-      <div className="grid lg:grid-cols-2 gap-5 mt-5">
-        {/* Upcoming */}
-        <div className="card">
-          <h2 className="text-base font-bold mb-3">Upcoming Deadlines</h2>
-
-          <div className="space-y-3">
-            <div className="border-l-4 border-red-400 pl-3">
-              <h3 className="text-sm font-semibold">DBMS Assignment</h3>
-              <p className="text-luna-100/50 text-xs mt-0.5">Due Tomorrow</p>
-            </div>
-
-            <div className="border-l-4 border-amber-400 pl-3">
-              <h3 className="text-sm font-semibold">CN Quiz</h3>
-              <p className="text-luna-100/50 text-xs mt-0.5">2 Days Left</p>
-            </div>
-
-            <div className="border-l-4 border-emerald-400 pl-3">
-              <h3 className="text-sm font-semibold">OS Lab</h3>
-              <p className="text-luna-100/50 text-xs mt-0.5">Friday</p>
-            </div>
-          </div>
-        </div>
-
-        {/* AI Card */}
-        <div className="gradient rounded-2xl text-white p-5">
-          <Sparkles size={26} />
-
-          <h2 className="text-base font-bold mt-3">AI Recommendation</h2>
-
-          <p className="mt-2.5 text-sm leading-6 text-white/90">
-            Based on your progress, spend <strong>90 more minutes</strong> on
-            DBMS this week. Your readiness score could improve from{" "}
-            <strong>78%</strong> to <strong>86%</strong>.
-          </p>
-
-          <button className="mt-4 bg-white text-luna-400 text-sm font-semibold px-4 py-2 rounded-full">
-            Regenerate Plan
-          </button>
-        </div>
       </div>
     </AppShell>
   );

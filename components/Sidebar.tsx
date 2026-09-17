@@ -1,75 +1,87 @@
 "use client";
-
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useStudy } from "@/context/StudyContext";
+import { useAuth } from "@/context/AuthContext";
+import { studyMetrics } from "@/lib/study";
 import {
   LayoutDashboard,
-  Calendar,
+  CalendarDays,
   Notebook,
   Timer,
   Brain,
-  BarChart3,
+  ChartNoAxesCombined,
   Flame,
+  LogOut,
+  Sparkles,
 } from "lucide-react";
-
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/planner", label: "Planner", icon: Calendar },
+  { href: "/planner", label: "Planner", icon: CalendarDays },
   { href: "/notes", label: "Notes AI", icon: Notebook },
   { href: "/focus", label: "Focus Mode", icon: Timer },
   { href: "/quiz", label: "Quiz", icon: Brain },
-  { href: "/analytics", label: "Analytics", icon: BarChart3 },
+  { href: "/analytics", label: "Analytics", icon: ChartNoAxesCombined },
 ];
-
 export default function Sidebar() {
   const pathname = usePathname();
-
+  const router = useRouter();
+  const { data } = useStudy();
+  const { user, logout } = useAuth();
+  const { streak } = studyMetrics(data);
+  const name = user?.email?.split("@")[0] ?? "Student";
   return (
-    <aside className="w-56 h-screen fixed left-0 top-0 flex flex-col bg-luna-500/60 backdrop-blur-xl border-r border-luna-100/10 p-4">
-      <Link href="/" className="flex items-center gap-2 mb-6 px-1">
-        <div className="w-8 h-8 rounded-full bg-linear-to-br from-luna-200 to-luna-300 flex items-center justify-center text-white font-bold text-sm shrink-0">
-          F
-        </div>
-        <span className="text-base font-bold text-gradient truncate">
-          FocusGeek
+    <aside className="sidebar">
+      <Link href="/" className="brand px-2">
+        <span className="brand-symbol">
+          <Sparkles size={17} strokeWidth={1.7} />
         </span>
+        FocusGeek<span className="text-[#a18da4]">.</span>
       </Link>
-
-      <nav className="flex flex-col gap-1 flex-1 overflow-y-auto">
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          const active = pathname === item.href;
-
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              aria-current={active ? "page" : undefined}
-              className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition ${
-                active
-                  ? "bg-linear-to-br from-luna-200 to-luna-300 text-white shadow-lg"
-                  : "text-luna-100/60 hover:bg-white/5 hover:text-luna-100"
-              }`}
-            >
-              <Icon size={17} />
-              {item.label}
-            </Link>
-          );
-        })}
+      <div className="sidebar-profile">
+        <div className="avatar">{name[0].toUpperCase()}</div>
+        <div className="min-w-0">
+          <p className="text-[13px] font-semibold capitalize truncate">
+            {name}
+          </p>
+          <p className="text-[11px] text-muted mt-1">A curious mind</p>
+        </div>
+      </div>
+      <nav aria-label="Main navigation" className="space-y-1">
+        {navItems.map((item) => (
+          <Link
+            className={`side-link ${pathname === item.href ? "active" : ""}`}
+            aria-current={pathname === item.href ? "page" : undefined}
+            key={item.href}
+            href={item.href}
+          >
+            <item.icon size={18} strokeWidth={1.8} />
+            {item.label}
+          </Link>
+        ))}
       </nav>
-
-      <div className="rounded-2xl bg-linear-to-br from-luna-300 to-luna-400 p-3.5 border border-luna-100/10">
-        <Flame className="text-amber-300" size={20} />
-        <p className="font-semibold mt-2 text-sm">14 Day Streak</p>
-        <p className="text-xs text-luna-100/60 mt-1 leading-snug">
-          Keep it up to boost your readiness score.
-        </p>
-        <Link
-          href="/analytics"
-          className="block text-center mt-3 bg-white/10 hover:bg-white/20 text-xs font-semibold py-2 rounded-full transition"
+      <div className="sidebar-bottom">
+        <div className="border-t border-[#cfc1cc] pt-5 mb-7">
+          <div className="flex items-center gap-2">
+            <Flame size={16} className="text-[#b68469]" />
+            <p className="text-xs font-semibold">{streak} day study streak</p>
+          </div>
+          <p className="text-[11px] text-muted mt-2 leading-relaxed">
+            Small steps, every day.
+            <br />
+            You&apos;re building something good.
+          </p>
+        </div>
+        <button
+          className="flex items-center gap-2 text-xs text-muted hover:text-luna-300"
+          onClick={async () => {
+            await logout();
+            router.push("/login");
+          }}
         >
-          View Progress
-        </Link>
+          <LogOut size={16} />
+          Log out
+        </button>
       </div>
     </aside>
   );

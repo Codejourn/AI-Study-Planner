@@ -7,8 +7,15 @@ import { UserPlus, Mail, Lock, User, ShieldCheck, Loader2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
 export default function SignupPage() {
-  const { signup, confirmSignup, resendCode, error, clearError, user, loading: sessionLoading } =
-    useAuth();
+  const {
+    signup,
+    confirmSignup,
+    resendCode,
+    error,
+    clearError,
+    user,
+    loading: sessionLoading,
+  } = useAuth();
   const router = useRouter();
 
   const [step, setStep] = useState<"details" | "confirm">("details");
@@ -83,13 +90,13 @@ export default function SignupPage() {
     confirmPassword.length > 0 && password !== confirmPassword;
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-6">
+    <div className="auth-page">
       <div className="card w-full max-w-md">
         <div className="text-center mb-6">
           <Link href="/" className="text-2xl font-bold text-gradient">
             FocusGeek
           </Link>
-          <p className="text-luna-100/50 text-sm mt-2">
+          <p className="text-muted text-sm mt-2">
             {step === "details"
               ? "Create your account to get started."
               : `Enter the code sent to ${email}.`}
@@ -99,7 +106,7 @@ export default function SignupPage() {
         {error && (
           <div
             role="alert"
-            className="bg-red-500/10 border border-red-500/30 text-red-300 text-sm rounded-xl px-4 py-3 mb-4"
+            className="bg-red-500/10 border border-red-500/30 text-red-700 text-sm rounded-xl px-4 py-3 mb-4"
           >
             {error}
           </div>
@@ -114,11 +121,11 @@ export default function SignupPage() {
         {step === "details" ? (
           <form onSubmit={handleDetailsSubmit} className="space-y-4">
             <div>
-              <label htmlFor="name" className="text-xs text-luna-100/60">
+              <label htmlFor="name" className="text-xs text-muted">
                 Name
               </label>
               <div className="flex items-center gap-2 glass-input rounded-full px-4 py-2.5 mt-1.5">
-                <User size={16} className="text-luna-100/40 shrink-0" />
+                <User size={16} className="text-muted shrink-0" />
                 <input
                   id="name"
                   required
@@ -132,11 +139,11 @@ export default function SignupPage() {
             </div>
 
             <div>
-              <label htmlFor="email" className="text-xs text-luna-100/60">
+              <label htmlFor="email" className="text-xs text-muted">
                 Email
               </label>
               <div className="flex items-center gap-2 glass-input rounded-full px-4 py-2.5 mt-1.5">
-                <Mail size={16} className="text-luna-100/40 shrink-0" />
+                <Mail size={16} className="text-muted shrink-0" />
                 <input
                   id="email"
                   type="email"
@@ -151,11 +158,11 @@ export default function SignupPage() {
             </div>
 
             <div>
-              <label htmlFor="password" className="text-xs text-luna-100/60">
+              <label htmlFor="password" className="text-xs text-muted">
                 Password
               </label>
               <div className="flex items-center gap-2 glass-input rounded-full px-4 py-2.5 mt-1.5">
-                <Lock size={16} className="text-luna-100/40 shrink-0" />
+                <Lock size={16} className="text-muted shrink-0" />
                 <input
                   id="password"
                   type="password"
@@ -171,14 +178,11 @@ export default function SignupPage() {
             </div>
 
             <div>
-              <label
-                htmlFor="confirmPassword"
-                className="text-xs text-luna-100/60"
-              >
+              <label htmlFor="confirmPassword" className="text-xs text-muted">
                 Confirm Password
               </label>
               <div className="flex items-center gap-2 glass-input rounded-full px-4 py-2.5 mt-1.5">
-                <Lock size={16} className="text-luna-100/40 shrink-0" />
+                <Lock size={16} className="text-muted shrink-0" />
                 <input
                   id="confirmPassword"
                   type="password"
@@ -191,7 +195,7 @@ export default function SignupPage() {
                 />
               </div>
               {passwordMismatch && (
-                <p className="text-red-300 text-xs mt-1.5">
+                <p className="text-red-700 text-xs mt-1.5">
                   Passwords do not match.
                 </p>
               )}
@@ -213,11 +217,11 @@ export default function SignupPage() {
         ) : (
           <form onSubmit={handleConfirmSubmit} className="space-y-4">
             <div>
-              <label htmlFor="code" className="text-xs text-luna-100/60">
+              <label htmlFor="code" className="text-xs text-muted">
                 Confirmation Code
               </label>
               <div className="flex items-center gap-2 glass-input rounded-full px-4 py-2.5 mt-1.5">
-                <ShieldCheck size={16} className="text-luna-100/40 shrink-0" />
+                <ShieldCheck size={16} className="text-muted shrink-0" />
                 <input
                   id="code"
                   required
@@ -242,7 +246,7 @@ export default function SignupPage() {
             <button
               type="button"
               onClick={handleResend}
-              className="w-full text-center text-xs text-luna-100/60 hover:text-luna-100 transition"
+              className="w-full text-center text-xs text-muted hover:text-luna-100 transition"
             >
               Resend code
             </button>
@@ -250,7 +254,7 @@ export default function SignupPage() {
         )}
 
         {step === "details" && (
-          <p className="text-center text-sm text-luna-100/50 mt-6">
+          <p className="text-center text-sm text-muted mt-6">
             Already have an account?{" "}
             <Link href="/login" className="text-luna-100 font-semibold">
               Login

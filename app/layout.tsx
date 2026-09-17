@@ -1,9 +1,11 @@
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
+import { StudyProvider } from "@/context/StudyContext";
 
 export const metadata = {
-  title: "FocusGeek",
-  description: "AI Powered Study Planner",
+  title: "FocusGeek | Study Planner & Learning Assistant",
+  description:
+    "Plan your studies, manage notes, test your knowledge, and track exam readiness with FocusGeek.",
 };
 
 export default function RootLayout({
@@ -14,7 +16,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <StudyProvider>{children}</StudyProvider>
+        </AuthProvider>
       </body>
     </html>
   );

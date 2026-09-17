@@ -7,7 +7,15 @@ import { LogIn, Mail, Lock, Loader2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
 export default function LoginPage() {
-  const { login, error, clearError, user, loading: sessionLoading } = useAuth();
+  const {
+    login,
+    startDemo,
+    isConfigured,
+    error,
+    clearError,
+    user,
+    loading: sessionLoading,
+  } = useAuth();
   const router = useRouter();
 
   const [email, setEmail] = useState("");
@@ -36,13 +44,13 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-6">
+    <div className="auth-page">
       <div className="card w-full max-w-md">
         <div className="text-center mb-6">
           <Link href="/" className="text-2xl font-bold text-gradient">
             FocusGeek
           </Link>
-          <p className="text-luna-100/50 text-sm mt-2">
+          <p className="text-muted text-sm mt-2">
             Welcome back. Sign in to continue.
           </p>
         </div>
@@ -50,19 +58,36 @@ export default function LoginPage() {
         {error && (
           <div
             role="alert"
-            className="bg-red-500/10 border border-red-500/30 text-red-300 text-sm rounded-xl px-4 py-3 mb-4"
+            className="bg-red-500/10 border border-red-500/30 text-red-700 text-sm rounded-xl px-4 py-3 mb-4"
           >
             {error}
           </div>
         )}
 
+        {!isConfigured && (
+          <div className="mb-5 space-y-3 text-sm">
+            <p>
+              Cloud sign-in is not configured. Try a local workspace; your study
+              data stays in this browser.
+            </p>
+            <button
+              className="action"
+              onClick={() => {
+                startDemo();
+                router.push("/dashboard");
+              }}
+            >
+              Try FocusGeek locally
+            </button>
+          </div>
+        )}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="email" className="text-xs text-luna-100/60">
+            <label htmlFor="email" className="text-xs text-muted">
               Email
             </label>
             <div className="flex items-center gap-2 glass-input rounded-full px-4 py-2.5 mt-1.5">
-              <Mail size={16} className="text-luna-100/40 shrink-0" />
+              <Mail size={16} className="text-muted shrink-0" />
               <input
                 id="email"
                 type="email"
@@ -77,11 +102,11 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label htmlFor="password" className="text-xs text-luna-100/60">
+            <label htmlFor="password" className="text-xs text-muted">
               Password
             </label>
             <div className="flex items-center gap-2 glass-input rounded-full px-4 py-2.5 mt-1.5">
-              <Lock size={16} className="text-luna-100/40 shrink-0" />
+              <Lock size={16} className="text-muted shrink-0" />
               <input
                 id="password"
                 type="password"
@@ -97,7 +122,7 @@ export default function LoginPage() {
 
           <button
             type="submit"
-            disabled={submitting}
+            disabled={submitting || !isConfigured}
             className="w-full flex items-center justify-center gap-2 bg-linear-to-br from-luna-200 to-luna-300 text-white text-sm font-semibold px-5 py-3 rounded-full hover:brightness-110 transition disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {submitting ? (
@@ -109,7 +134,7 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <p className="text-center text-sm text-luna-100/50 mt-6">
+        <p className="text-center text-sm text-muted mt-6">
           Don&apos;t have an account?{" "}
           <Link href="/signup" className="text-luna-100 font-semibold">
             Sign up
