@@ -15,7 +15,7 @@ from botocore.exceptions import ClientError
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 MAX_FILE = 2 * 1024 * 1024
-EMPTY = {"subjects": [], "tasks": [], "sessions": [], "attempts": [], "notes": [], "dailyHours": 2}
+EMPTY = {"subjects": [], "tasks": [], "deadlines": [], "sessions": [], "attempts": [], "notes": [], "dailyHours": 2}
 
 
 def response(status, payload):
@@ -46,6 +46,19 @@ def validate_state(data):
         if not isinstance(t.get("title"), str) or not isinstance(t.get("subjectId"), str) or type(t.get("completed")) is not bool or not number(t.get("minutes"), 1, 720):
             raise ValueError("Invalid task.")
         date.fromisoformat(t["date"])
+    deadlines = data.get("deadlines", [])
+    if not isinstance(deadlines, list) or len(deadlines) > 1000:
+        raise ValueError("Invalid deadlines.")
+    deadline_ids = set()
+    for item in deadlines:
+        if (not isinstance(item, dict) or not isinstance(item.get("id"), str)
+                or item["id"] in deadline_ids or not isinstance(item.get("title"), str)
+                or not item["title"].strip() or len(item["title"]) > 120
+                or not isinstance(item.get("subjectId"), str)
+                or type(item.get("completed")) is not bool):
+            raise ValueError("Invalid deadline.")
+        deadline_ids.add(item["id"])
+        date.fromisoformat(item["date"])
     for s in data["sessions"]:
         if not isinstance(s.get("subjectId"), str) or not isinstance(s.get("completedAt"), str) or not number(s.get("minutes"), 1, 720):
             raise ValueError("Invalid focus session.")

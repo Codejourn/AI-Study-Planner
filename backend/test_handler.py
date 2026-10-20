@@ -49,6 +49,14 @@ class BackendTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             handler.validate_state(data)
 
+    def test_deadlines_are_saved_and_validated(self):
+        data = copy.deepcopy(handler.EMPTY)
+        data["deadlines"] = [{"id": "lab", "title": "Lab report", "date": "2026-10-22", "subjectId": "", "completed": False}]
+        self.assertIn("Lab report", handler.validate_state(data))
+        data["deadlines"][0]["completed"] = "no"
+        with self.assertRaises(ValueError):
+            handler.validate_state(data)
+
     def test_ai_schedule_cannot_exceed_daily_budget(self):
         data = copy.deepcopy(handler.EMPTY)
         data["dailyHours"] = .5

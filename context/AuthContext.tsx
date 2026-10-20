@@ -16,12 +16,15 @@ import {
   signOut as amplifySignOut,
   getCurrentUser,
   fetchAuthSession,
+  fetchUserAttributes,
+  updateUserAttribute,
 } from "aws-amplify/auth";
 import { isCognitoConfigured } from "@/lib/amplify-config";
 
 interface AuthUser {
   username: string;
   email?: string;
+  displayName?: string;
 }
 
 interface AuthContextValue {
@@ -41,9 +44,20 @@ interface AuthContextValue {
   clearError: () => void;
   getToken: () => Promise<string | null>;
   startDemo: () => void;
+  saveDisplayName: (name: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+const localDemoAvailable = !isCognitoConfigured || process.env.NODE_ENV === "development";
+const localDisplayNameKey = "focusgeek:local-display-name";
+
+function localDisplayName() {
+  try {
+    return localStorage.getItem(localDisplayNameKey)?.trim() || "Student";
+  } catch {
+    return "Student";
+  }
+}
 
 function messageFor(err: unknown, fallback: string) {
   if (!isCognitoConfigured) {
@@ -59,25 +73,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshUser = useCallback(async () => {
     await Promise.resolve();
-    if (!isCognitoConfigured) {
+    if (localDemoAvailable) {
       try {
-        setUser(
-          sessionStorage.getItem("focusgeek:demo") === "true"
-            ? { username: "local-demo" }
-            : null,
-        );
+        if (sessionStorage.getItem("focusgeek:demo") === "true") {
+          setUser({ username: "local-demo", displayName: localDisplayName() });
+          setLoading(false);
+          return;
+        }
       } catch {
-        setUser(null);
+        // Continue with Cognito, or an empty local session when it is disabled.
       }
+    }
+    if (!isCognitoConfigured) {
+      setUser(null);
       setLoading(false);
       return;
     }
 
     try {
       const current = await getCurrentUser();
+      let attributes: Awaited<ReturnType<typeof fetchUserAttributes>> = {};
+      try {
+        attributes = await fetchUserAttributes();
+      } catch {
+        // A temporary profile lookup error should not sign the student out.
+      }
       setUser({
         username: current.username,
-        email: current.signInDetails?.loginId,
+        email: attributes.email ?? current.signInDetails?.loginId,
+        displayName: attributes.name?.trim() || "Student",
       });
     } catch {
       setUser(null);
@@ -111,10 +135,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signup = async (email: string, password: string, name: string) => {
     setError(null);
     try {
+      const displayName = name.trim().replace(/\s+/g, " ");
+      if (!displayName || displayName.length > 60)
+        throw new Error("Enter a display name of 1 to 60 characters.");
       const result = await amplifySignUp({
         username: email,
         password,
-        options: { userAttributes: { email, name } },
+        options: { userAttributes: { email, name: displayName } },
       });
       return {
         confirmationRequired: result.nextStep.signUpStep === "CONFIRM_SIGN_UP",
@@ -169,6 +196,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const saveDisplayName = async (name: string) => {
+    const displayName = name.trim().replace(/\s+/g, " ");
+    if (!displayName || displayName.length > 60)
+      throw new Error("Enter a display name of 1 to 60 characters.");
+    if (!user) throw new Error("Sign in to change your display name.");
+    if (user.username === "local-demo") {
+      try {
+        localStorage.setItem(localDisplayNameKey, displayName);
+      } catch {
+        throw new Error("Browser storage is unavailable. Your name was not saved.");
+      }
+    } else {
+      const result = await updateUserAttribute({
+        userAttribute: { attributeKey: "name", value: displayName },
+      });
+      if (result.nextStep.updateAttributeStep !== "DONE")
+        throw new Error("The name change needs confirmation before it can be shown.");
+    }
+    setUser((current) =>
+      current ? { ...current, displayName } : current,
+    );
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -183,6 +233,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         logout,
         clearError,
         getToken,
+        saveDisplayName,
         startDemo: () => {
           try {
             sessionStorage.setItem("focusgeek:demo", "true");
@@ -191,7 +242,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               "Session storage is disabled. This local session will end on reload.",
             );
           }
-          setUser({ username: "local-demo" });
+          setUser({ username: "local-demo", displayName: localDisplayName() });
         },
       }}
     >

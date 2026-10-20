@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LogIn, Mail, Lock, Loader2 } from "lucide-react";
@@ -21,15 +21,22 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const loginNavigation = useRef(false);
 
   useEffect(() => {
-    if (!sessionLoading && user) {
+    if (
+      !sessionLoading &&
+      user &&
+      !loginNavigation.current &&
+      (user.username === "local-demo" || process.env.NODE_ENV !== "development")
+    ) {
       router.replace("/dashboard");
     }
   }, [sessionLoading, user, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    loginNavigation.current = true;
     clearError();
     setSubmitting(true);
 
@@ -64,17 +71,17 @@ export default function LoginPage() {
           </div>
         )}
 
-        {!isConfigured && (
+        {(!isConfigured || process.env.NODE_ENV === "development") && (
           <div className="mb-5 space-y-3 text-sm">
             <p>
-              Cloud sign-in is not configured. Try a local workspace; your study
-              data stays in this browser.
+              {isConfigured
+                ? "Preview your study space locally. Your changes stay in this browser."
+                : "Cloud sign-in is not configured. Try a local workspace; your study data stays in this browser."}
             </p>
             <button
               className="action"
               onClick={() => {
                 startDemo();
-                router.push("/dashboard");
               }}
             >
               Try FocusGeek locally

@@ -122,20 +122,22 @@ export default function SignupPage() {
           <form onSubmit={handleDetailsSubmit} className="space-y-4">
             <div>
               <label htmlFor="name" className="text-xs text-muted">
-                Name
+                Display name
               </label>
               <div className="flex items-center gap-2 glass-input rounded-full px-4 py-2.5 mt-1.5">
                 <User size={16} className="text-muted shrink-0" />
                 <input
                   id="name"
                   required
+                  maxLength={60}
                   autoComplete="name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Your name"
+                  placeholder="What should we call you?"
                   className="bg-transparent outline-none text-sm w-full"
                 />
               </div>
+              <p className="text-[11px] text-muted mt-1.5">Shown on your dashboard. You can change it later.</p>
             </div>
 
             <div>

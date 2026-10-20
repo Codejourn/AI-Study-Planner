@@ -18,6 +18,7 @@ import {
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/planner", label: "Planner", icon: CalendarDays },
+  { href: "/calendar", label: "Calendar", icon: CalendarDays },
   { href: "/notes", label: "Notes AI", icon: Notebook },
   { href: "/focus", label: "Focus Mode", icon: Timer },
   { href: "/quiz", label: "Quiz", icon: Brain },
@@ -29,7 +30,7 @@ export default function Sidebar() {
   const { data } = useStudy();
   const { user, logout } = useAuth();
   const { streak } = studyMetrics(data);
-  const name = user?.email?.split("@")[0] ?? "Student";
+  const name = user?.displayName?.trim() || "Student";
   return (
     <aside className="sidebar">
       <Link href="/" className="brand px-2">
@@ -41,7 +42,7 @@ export default function Sidebar() {
       <div className="sidebar-profile">
         <div className="avatar">{name[0].toUpperCase()}</div>
         <div className="min-w-0">
-          <p className="text-[13px] font-semibold capitalize truncate">
+          <p className="text-[13px] font-semibold truncate">
             {name}
           </p>
           <p className="text-[11px] text-muted mt-1">A curious mind</p>

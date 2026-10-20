@@ -2,7 +2,7 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { LogOut, Search, ChevronDown, BookOpen, FileText } from "lucide-react";
+import { LogOut, Search, ChevronDown, BookOpen, FileText, Pencil } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useStudy } from "@/context/StudyContext";
 import { useClickOutside } from "@/hooks/useClickOutside";
@@ -11,16 +11,34 @@ interface Props {
   subtitle?: string;
 }
 export default function TopBar({ title, subtitle }: Props) {
-  const { user, logout } = useAuth();
+  const { user, logout, saveDisplayName } = useAuth();
   const { data } = useStudy();
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [editingName, setEditingName] = useState(false);
+  const [draftName, setDraftName] = useState("");
+  const [savingName, setSavingName] = useState(false);
+  const [profileMessage, setProfileMessage] = useState("");
   const [query, setQuery] = useState("");
   const menuRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLDivElement>(null);
   useClickOutside(menuRef, () => setMenuOpen(false));
   useClickOutside(searchRef, () => setQuery(""));
-  const name = user?.email?.split("@")[0] ?? "learner";
+  const name = user?.displayName?.trim() || "Student";
+  async function handleNameSave(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setSavingName(true);
+    setProfileMessage("");
+    try {
+      await saveDisplayName(draftName);
+      setEditingName(false);
+      setProfileMessage("Display name saved.");
+    } catch (error) {
+      setProfileMessage(error instanceof Error ? error.message : "Could not save your display name.");
+    } finally {
+      setSavingName(false);
+    }
+  }
   const matches = query.trim()
     ? [
         ...data.subjects.map((s) => ({
@@ -111,10 +129,39 @@ export default function TopBar({ title, subtitle }: Props) {
             <ChevronDown size={12} className="text-muted" />
           </button>
           {menuOpen && (
-            <div className="absolute right-0 mt-3 w-52 bg-[#f8f4ec] border border-[#d6cad6] rounded-2xl p-2 z-50 shadow-lg">
-              <p className="text-xs truncate px-3 py-3 text-muted border-b border-[#e1d6df]">
-                {user?.email ?? "Local workspace"}
-              </p>
+            <div className="absolute right-0 mt-3 w-64 max-w-[calc(100vw-24px)] bg-[#f8f4ec] border border-[#d6cad6] rounded-2xl p-2 z-50 shadow-lg">
+              <div className="px-3 py-3 border-b border-[#e1d6df]">
+                <p className="text-xs font-semibold truncate">{name}</p>
+                <p className="text-[11px] truncate text-muted mt-1">{user?.email ?? "Local workspace"}</p>
+              </div>
+              {editingName ? (
+                <form onSubmit={(event) => void handleNameSave(event)} className="px-3 py-3 space-y-2">
+                  <label htmlFor="profile-display-name" className="text-xs font-medium">Display name</label>
+                  <input
+                    id="profile-display-name"
+                    className="field mt-1"
+                    required
+                    autoFocus
+                    maxLength={60}
+                    value={draftName}
+                    onChange={(event) => setDraftName(event.target.value)}
+                  />
+                  <div className="flex items-center gap-3">
+                    <button className="action" type="submit" disabled={savingName}>{savingName ? "Saving..." : "Save name"}</button>
+                    <button type="button" className="text-xs text-muted" onClick={() => { setEditingName(false); setProfileMessage(""); }}>Cancel</button>
+                  </div>
+                </form>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => { setDraftName(name); setEditingName(true); setProfileMessage(""); }}
+                  className="flex items-center gap-2 px-3 py-3 w-full rounded-xl text-xs hover:bg-[#e9dfe8]"
+                >
+                  <Pencil size={14} />
+                  Edit display name
+                </button>
+              )}
+              {profileMessage && <p role="status" className="px-3 pb-2 text-xs text-[#755b79]">{profileMessage}</p>}
               <button
                 onClick={async () => {
                   await logout();

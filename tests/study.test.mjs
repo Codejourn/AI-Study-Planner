@@ -20,8 +20,28 @@ vm.runInNewContext(compiled, {
   Math,
   Number,
 });
-const { emptyStudy, generatePlan, studyMetrics, isStudyData, localDate } =
+const { emptyStudy, generatePlan, studyMetrics, isStudyData, localDate, calendarEvents } =
   moduleObject.exports;
+test("calendar combines exams and deadlines, including older saved workspaces", () => {
+  const olderWorkspace = {
+    ...emptyStudy,
+    subjects: [{ id: "dbms", name: "DBMS", examDate: "2026-10-24", priority: 2 }],
+  };
+  delete olderWorkspace.deadlines;
+  assert.equal(isStudyData(olderWorkspace), true);
+  assert.deepEqual(Array.from(calendarEvents(olderWorkspace), (item) => item.type), ["exam"]);
+  const data = {
+    ...olderWorkspace,
+    deadlines: [
+      { id: "lab", title: "Lab report", date: "2026-10-22", subjectId: "dbms", completed: false },
+      { id: "project", title: "Project proposal", date: "2026-10-24", subjectId: "", completed: true },
+    ],
+  };
+  assert.equal(isStudyData(data), true);
+  assert.deepEqual(Array.from(calendarEvents(data), (item) => item.title), ["Lab report", "DBMS exam", "Project proposal"]);
+  assert.equal(calendarEvents(data)[2].completed, true);
+  assert.equal(isStudyData({ ...data, deadlines: [{ ...data.deadlines[0], completed: "yes" }] }), false);
+});
 test("scheduler prioritizes urgent exams, excludes expired exams, and respects daily hours", () => {
   const data = {
     ...emptyStudy,

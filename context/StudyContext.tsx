@@ -9,6 +9,7 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import { emptyStudy, isStudyData, StudyData } from "@/lib/study";
 import { apiConfigured, apiRequest } from "@/lib/api";
+import { usePathname } from "next/navigation";
 
 interface StudyContextValue {
   data: StudyData;
@@ -29,6 +30,7 @@ function UserStudyProvider({
   cloud: boolean;
   children: ReactNode;
 }) {
+  const { startDemo } = useAuth();
   const [data, setData] = useState<StudyData>(emptyStudy);
   const [ready, setReady] = useState(false);
   const [revision, setRevision] = useState<number | null>(null);
@@ -131,6 +133,14 @@ function UserStudyProvider({
         >
           Retry
         </button>
+        {process.env.NODE_ENV === "development" && (
+          <button
+            className="action mt-4 ml-3"
+            onClick={startDemo}
+          >
+            Try FocusGeek locally
+          </button>
+        )}
       </div>
     );
   return (
@@ -151,7 +161,9 @@ function UserStudyProvider({
 }
 export function StudyProvider({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
-  if (loading || !user)
+  const pathname = usePathname();
+  const publicPage = pathname === "/" || pathname === "/login" || pathname === "/signup";
+  if (loading || !user || publicPage)
     return (
       <StudyContext.Provider
         value={{

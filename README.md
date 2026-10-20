@@ -13,10 +13,12 @@ _Dashboard preview with sample data in a local workspace._
 ## What you can do
 
 - **Plan your studies:** manage subjects, exam dates, priorities, and daily available hours. Generate a study plan with Amazon Bedrock or use the local deadline-based scheduler.
+- **See what is due:** the Calendar collects subject exams and assignment or project deadlines. Select a date to review its events; add, edit, complete, and remove deadlines there.
 - **Learn from your notes:** upload notes, read them, search passages, and ask Bedrock questions about the extracted content.
 - **Test your understanding:** generate quizzes by subject, difficulty, and optional notes. Submit answers, review explanations, and keep a performance history.
-- **Make time to focus:** run a Pomodoro timer with pause, resume, and reset. Completed sessions contribute to your recorded study hours.
+- **Make time to focus:** run a Pomodoro timer with pause, resume, reset, and an optional completion chime. Completed sessions contribute to your recorded study hours.
 - **See your progress:** track completed tasks, quiz accuracy, focused hours, consistency, and an exam-readiness estimate.
+- **Make it yours:** choose a display name during sign-up and change it later from the account menu. Cloud accounts save it in Cognito; the local workspace saves it in this browser.
 
 ## Tech stack
 
@@ -63,7 +65,7 @@ Open **http://localhost:3000**.
 
 ### Local workspace
 
-Leave the three environment values empty. Open `/login` and choose **Try FocusGeek locally**. No AWS account or credentials are required.
+Run `npm run dev`, open `/login`, and choose **Try FocusGeek locally**. The button is available during local development even when Cognito values are configured. No AWS account or credentials are required for this workspace.
 
 Local mode supports subjects, tasks, deadline-based scheduling, TXT/Markdown notes with passage search, a fixed DBMS practice quiz, focus sessions, and analytics. Local scheduling, search, and the practice quiz do **not** call generative AI.
 
@@ -150,7 +152,7 @@ The local dashboard browser test uses `FOCUSGEEK_E2E_LOCAL=1` and `FOCUSGEEK_E2E
 
 Infrastructure commands and configuration are documented in [AWS setup](docs/AWS-SETUP.md). A stack named `focusgeek` was deployed in Mumbai (`ap-south-1`) on September 18, 2026. The local environment in this workspace is connected to that stack; public repository checkouts do not include those values.
 
-The frontend currently runs locally. For Vercel, set the three public environment values, publish the frontend, and update `FrontendOrigin` in the AWS stack to the exact deployed origin. The current API CORS origin is `http://localhost:3000`.
+The frontend is deployed at https://focus-geek.vercel.app. Set the three public environment values in Vercel for Production and Preview before building. The AWS stack's `FrontendOrigin` is `https://focus-geek.vercel.app`; other origins, including localhost and separate preview URLs, need a corresponding backend configuration change to access the API.
 
 Use the Next.js framework preset, the repository root directory, `npm ci` as the install command, and `npm run build` as the build command. Commit `package-lock.json` together with dependency changes. After fixing an install failure, redeploy with the existing build cache disabled.
 

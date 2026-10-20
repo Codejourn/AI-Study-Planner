@@ -3,7 +3,7 @@ import { useState } from "react";
 import Link from "next/link";
 import AppShell from "@/components/AppShell";
 import { useStudy } from "@/context/StudyContext";
-import { localDate, studyMetrics } from "@/lib/study";
+import { calendarEvents, localDate, studyMetrics } from "@/lib/study";
 import {
   ArrowUpRight,
   BookOpen,
@@ -65,6 +65,8 @@ export default function Dashboard() {
   );
   const [selected, setSelected] = useState(localDate());
   const tasks = data.tasks.filter((t) => t.date === selected);
+  const events = calendarEvents(data);
+  const selectedEvents = events.filter((event) => event.date === selected);
   const exams = [...data.subjects]
     .filter((s) => s.examDate >= localDate())
     .sort((a, b) => a.examDate.localeCompare(b.examDate));
@@ -177,6 +179,9 @@ export default function Dashboard() {
               <Link href="/planner" className="panel-link">
                 Open planner <ArrowUpRight size={12} />
               </Link>
+              <Link href="/calendar" className="panel-link">
+                Full calendar <ArrowUpRight size={12} />
+              </Link>
             </div>
             <div className="schedule-content">
               <div className="mini-calendar">
@@ -219,7 +224,8 @@ export default function Dashboard() {
                         className={`${selected === date ? "selected" : ""} ${date === localDate() ? "today" : ""}`}
                       >
                         {i + 1}
-                        {data.tasks.some((t) => t.date === date) && (
+                        {(data.tasks.some((t) => t.date === date) ||
+                          events.some((event) => event.date === date)) && (
                           <i className="calendar-dot" />
                         )}
                       </button>
@@ -241,6 +247,14 @@ export default function Dashboard() {
                     {tasks.length} tasks
                   </span>
                 </div>
+                {selectedEvents.map((event) => (
+                  <Link href="/calendar" key={event.id} className="schedule-row gap-3">
+                    <span className={`calendar-event-pill ${event.type}`}>
+                      {event.type === "exam" ? "Exam" : "Due"}
+                    </span>
+                    <span className="text-xs font-medium">{event.title}</span>
+                  </Link>
+                ))}
                 {tasks.length ? (
                   tasks.slice(0, 4).map((t) => (
                     <label key={t.id} className="schedule-row">
@@ -277,7 +291,7 @@ export default function Dashboard() {
                       />
                     </label>
                   ))
-                ) : (
+                ) : !selectedEvents.length ? (
                   <div className="flex flex-col items-center justify-center text-center min-h-[165px]">
                     <span className="subject-icon gold mb-3">
                       <BookOpen size={17} />
@@ -292,7 +306,7 @@ export default function Dashboard() {
                       Plan this day <ArrowUpRight size={12} />
                     </Link>
                   </div>
-                )}
+                ) : null}
                 {tasks.length > 4 && (
                   <Link href="/planner" className="panel-link justify-end">
                     View all {tasks.length} tasks <ArrowUpRight size={12} />

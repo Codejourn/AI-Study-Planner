@@ -12,6 +12,21 @@ export interface Task {
   minutes: number;
   completed: boolean;
 }
+export interface Deadline {
+  id: string;
+  title: string;
+  date: string;
+  subjectId: string;
+  completed: boolean;
+}
+export interface CalendarEvent {
+  id: string;
+  title: string;
+  date: string;
+  type: "exam" | "deadline";
+  subject: string;
+  completed: boolean;
+}
 export interface FocusSession {
   id: string;
   subjectId: string;
@@ -32,6 +47,7 @@ export interface Note {
 }
 export interface StudyData {
   subjects: Subject[];
+  deadlines?: Deadline[];
   tasks: Task[];
   sessions: FocusSession[];
   attempts: QuizAttempt[];
@@ -40,12 +56,34 @@ export interface StudyData {
 }
 export const emptyStudy: StudyData = {
   subjects: [],
+  deadlines: [],
   tasks: [],
   sessions: [],
   attempts: [],
   notes: [],
   dailyHours: 2,
 };
+export function calendarEvents(data: StudyData): CalendarEvent[] {
+  const subjects = new Map(data.subjects.map((subject) => [subject.id, subject.name]));
+  return [
+    ...data.subjects.map((subject) => ({
+      id: `exam-${subject.id}`,
+      title: `${subject.name} exam`,
+      date: subject.examDate,
+      type: "exam" as const,
+      subject: subject.name,
+      completed: false,
+    })),
+    ...(data.deadlines ?? []).map((deadline) => ({
+      id: `deadline-${deadline.id}`,
+      title: deadline.title,
+      date: deadline.date,
+      type: "deadline" as const,
+      subject: subjects.get(deadline.subjectId) ?? "General",
+      completed: deadline.completed,
+    })),
+  ].sort((a, b) => a.date.localeCompare(b.date) || a.title.localeCompare(b.title));
+}
 export function localDate(date = new Date()) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
@@ -155,6 +193,17 @@ export function isStudyData(value: unknown): value is StudyData {
         s.priority >= 1 &&
         s.priority <= 3,
     ) &&
+    (d.deadlines === undefined ||
+      (Array.isArray(d.deadlines) &&
+        d.deadlines.every(
+          (deadline) =>
+            deadline &&
+            str(deadline.id) &&
+            str(deadline.title) &&
+            str(deadline.subjectId) &&
+            /^\d{4}-\d{2}-\d{2}$/.test(deadline.date) &&
+            typeof deadline.completed === "boolean",
+        ))) &&
     Array.isArray(d.tasks) &&
     d.tasks.every(
       (t) =>
