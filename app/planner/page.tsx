@@ -20,7 +20,7 @@ export default function Planner() {
   const today = localDate();
   function saveSubject(e: React.FormEvent) {
     e.preventDefault();
-    if (!name.trim() || examDate < today) return;
+    if (!name.trim() || (examDate && examDate < today)) return;
     const subject: Subject = {
       id: editing ?? crypto.randomUUID(),
       name: name.trim(),
@@ -39,15 +39,14 @@ export default function Planner() {
   }
   function saveTask(e: React.FormEvent) {
     e.preventDefault();
-    const selected = subjectId || data.subjects[0]?.id;
-    if (!selected || !title.trim()) return;
+    if (!title.trim() || !date || minutes < 5 || minutes > 720) return;
     update((d) => ({
       ...d,
       tasks: [
         ...d.tasks,
         {
           id: crypto.randomUUID(),
-          subjectId: selected,
+          subjectId,
           title: title.trim(),
           date,
           minutes,
@@ -70,21 +69,23 @@ export default function Planner() {
         : generatePlan(data);
       if (!plan.length) {
         setNotice(
-          "No study time remains, or no upcoming exams were found. Check your subjects and daily hours.",
+          "No study time remains, or no subjects are available to plan. Check your subjects and daily hours.",
         );
         return;
       }
       update((d) => ({
         ...d,
         tasks: [
-          ...d.tasks.filter((t) => t.date !== today || t.completed),
+          ...d.tasks.filter(
+            (t) => t.date !== today || t.completed || !t.subjectId,
+          ),
           ...plan,
         ],
       }));
       setNotice(
         cloud
           ? "Bedrock generated your study plan. Save to cloud to keep it across devices."
-          : "Today's unfinished tasks were replaced with a deadline-based plan. This local scheduler does not use AI.",
+          : "Today's unfinished subject tasks were replaced with a new plan. General tasks were kept. This local scheduler does not use AI.",
       );
     } catch (error) {
       setNotice(
@@ -122,11 +123,10 @@ export default function Planner() {
             />
           </label>
           <label className="block text-sm">
-            Exam date
+            Exam date (optional)
             <input
               className="field"
               type="date"
-              required
               min={today}
               value={examDate}
               onChange={(e) => setExamDate(e.target.value)}
@@ -174,7 +174,7 @@ export default function Planner() {
               <div>
                 <p className="font-semibold">{s.name}</p>
                 <p className="text-xs text-muted">
-                  Exam: {s.examDate} ·{" "}
+                  {s.examDate ? `Exam: ${s.examDate}` : "No exam date"} ·{" "}
                   {["", "Low", "Medium", "High"][s.priority]} priority
                 </p>
               </div>
@@ -191,13 +191,21 @@ export default function Planner() {
                 </button>
                 <button
                   className="text-red-700"
-                  onClick={() =>
+                  onClick={() => {
+                    if (subjectId === s.id) setSubjectId("");
                     update((d) => ({
                       ...d,
                       subjects: d.subjects.filter((x) => x.id !== s.id),
-                      tasks: d.tasks.filter((t) => t.subjectId !== s.id),
-                    }))
-                  }
+                      tasks: d.tasks.map((t) =>
+                        t.subjectId === s.id ? { ...t, subjectId: "" } : t,
+                      ),
+                      deadlines: (d.deadlines ?? []).map((deadline) =>
+                        deadline.subjectId === s.id
+                          ? { ...deadline, subjectId: "" }
+                          : deadline,
+                      ),
+                    }));
+                  }}
                 >
                   Delete
                 </button>
@@ -250,16 +258,13 @@ export default function Planner() {
             />
           </label>
           <label className="text-sm">
-            Subject
+            Subject (optional)
             <select
               className="field"
-              required
-              value={subjectId || data.subjects[0]?.id || ""}
+              value={subjectId}
               onChange={(e) => setSubjectId(e.target.value)}
             >
-              <option value="" disabled>
-                Select subject
-              </option>
+              <option value="">General / no subject</option>
               {data.subjects.map((s) => (
                 <option key={s.id} value={s.id}>
                   {s.name}
@@ -290,9 +295,7 @@ export default function Planner() {
             />
           </label>
         </div>
-        <button className="action" disabled={!data.subjects.length}>
-          Add task
-        </button>
+        <button className="action">Add task</button>
       </form>
       <div className="card mt-5 space-y-3">
         <h2 className="font-bold">Study tasks</h2>
@@ -326,7 +329,9 @@ export default function Planner() {
                   {t.title}
                 </p>
                 <p className="text-xs text-muted">
-                  {t.date} · {t.minutes} minutes
+                  {t.date} · {t.minutes} minutes ·{" "}
+                  {data.subjects.find((s) => s.id === t.subjectId)?.name ??
+                    "General"}
                 </p>
               </div>
               <button

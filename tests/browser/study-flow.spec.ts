@@ -22,7 +22,7 @@ test("student can plan, learn, test, focus, and save progress", async ({
   const name = `Browser test ${Date.now()}`;
   const date = new Date(Date.now() + 10 * 86400000).toISOString().slice(0, 10);
   await page.getByLabel("Subject name", { exact: true }).fill(name);
-  await page.getByLabel("Exam date", { exact: true }).fill(date);
+  await page.getByLabel("Exam date (optional)", { exact: true }).fill(date);
   await page.getByRole("button", { name: "Save subject", exact: true }).click();
   await expect(page.getByText(name, { exact: true }).first()).toBeVisible();
   await page
@@ -47,15 +47,13 @@ test("student can plan, learn, test, focus, and save progress", async ({
   ).toBeVisible();
 
   await page.getByRole("link", { name: "Notes AI", exact: true }).click();
-  await page
-    .locator('input[type="file"]')
-    .setInputFiles({
-      name: "browser-dbms.txt",
-      mimeType: "text/plain",
-      buffer: Buffer.from(
-        "Second normal form removes partial dependencies on composite keys.",
-      ),
-    });
+  await page.locator('input[type="file"]').setInputFiles({
+    name: "browser-dbms.txt",
+    mimeType: "text/plain",
+    buffer: Buffer.from(
+      "Second normal form removes partial dependencies on composite keys.",
+    ),
+  });
   await expect(
     page.getByRole("heading", { name: "browser-dbms.txt", exact: true }),
   ).toBeVisible();

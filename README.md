@@ -12,7 +12,7 @@ _Dashboard preview with sample data in a local workspace._
 
 ## What you can do
 
-- **Plan your studies:** manage subjects, exam dates, priorities, and daily available hours. Generate a study plan with Amazon Bedrock or use the local deadline-based scheduler.
+- **Plan your studies:** add subjects with optional exam dates, set priorities and daily available hours, and create general tasks without a subject. Generate a study plan with Amazon Bedrock or use the local scheduler; both can include subjects without an exam date.
 - **See what is due:** the Calendar collects subject exams and assignment or project deadlines. Select a date to review its events; add, edit, complete, and remove deadlines there.
 - **Learn from your notes:** upload notes, read them, search passages, and ask Bedrock questions about the extracted content.
 - **Test your understanding:** generate quizzes by subject, difficulty, and optional notes. Submit answers, review explanations, and keep a performance history.

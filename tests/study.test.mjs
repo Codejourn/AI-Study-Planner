@@ -20,27 +20,91 @@ vm.runInNewContext(compiled, {
   Math,
   Number,
 });
-const { emptyStudy, generatePlan, studyMetrics, isStudyData, localDate, calendarEvents } =
-  moduleObject.exports;
+const {
+  emptyStudy,
+  generatePlan,
+  studyMetrics,
+  isStudyData,
+  localDate,
+  calendarEvents,
+} = moduleObject.exports;
 test("calendar combines exams and deadlines, including older saved workspaces", () => {
   const olderWorkspace = {
     ...emptyStudy,
-    subjects: [{ id: "dbms", name: "DBMS", examDate: "2026-10-24", priority: 2 }],
+    subjects: [
+      { id: "dbms", name: "DBMS", examDate: "2026-10-24", priority: 2 },
+    ],
   };
   delete olderWorkspace.deadlines;
   assert.equal(isStudyData(olderWorkspace), true);
-  assert.deepEqual(Array.from(calendarEvents(olderWorkspace), (item) => item.type), ["exam"]);
+  assert.deepEqual(
+    Array.from(calendarEvents(olderWorkspace), (item) => item.type),
+    ["exam"],
+  );
   const data = {
     ...olderWorkspace,
     deadlines: [
-      { id: "lab", title: "Lab report", date: "2026-10-22", subjectId: "dbms", completed: false },
-      { id: "project", title: "Project proposal", date: "2026-10-24", subjectId: "", completed: true },
+      {
+        id: "lab",
+        title: "Lab report",
+        date: "2026-10-22",
+        subjectId: "dbms",
+        completed: false,
+      },
+      {
+        id: "project",
+        title: "Project proposal",
+        date: "2026-10-24",
+        subjectId: "",
+        completed: true,
+      },
     ],
   };
   assert.equal(isStudyData(data), true);
-  assert.deepEqual(Array.from(calendarEvents(data), (item) => item.title), ["Lab report", "DBMS exam", "Project proposal"]);
+  assert.deepEqual(
+    Array.from(calendarEvents(data), (item) => item.title),
+    ["Lab report", "DBMS exam", "Project proposal"],
+  );
   assert.equal(calendarEvents(data)[2].completed, true);
-  assert.equal(isStudyData({ ...data, deadlines: [{ ...data.deadlines[0], completed: "yes" }] }), false);
+  assert.equal(
+    isStudyData({
+      ...data,
+      deadlines: [{ ...data.deadlines[0], completed: "yes" }],
+    }),
+    false,
+  );
+});
+
+test("general tasks and subjects without exams are valid, and undated subjects stay off the calendar", () => {
+  const data = {
+    ...emptyStudy,
+    subjects: [{ id: "reading", name: "Reading", examDate: "", priority: 2 }],
+    tasks: [
+      {
+        id: "errand",
+        subjectId: "",
+        title: "Buy supplies",
+        date: "2026-10-21",
+        minutes: 20,
+        completed: false,
+      },
+    ],
+  };
+  assert.equal(isStudyData(data), true);
+  assert.equal(calendarEvents(data).length, 0);
+  const plan = generatePlan(data, "2026-10-21");
+  assert.equal(plan[0].subjectId, "reading");
+  assert.equal(
+    plan.reduce((sum, task) => sum + task.minutes, 0),
+    100,
+  );
+  assert.equal(
+    isStudyData({
+      ...data,
+      subjects: [{ ...data.subjects[0], examDate: null }],
+    }),
+    false,
+  );
 });
 test("scheduler prioritizes urgent exams, excludes expired exams, and respects daily hours", () => {
   const data = {

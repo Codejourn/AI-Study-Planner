@@ -41,7 +41,11 @@ def validate_state(data):
     for s in data["subjects"]:
         if not isinstance(s.get("name"), str) or not s["name"].strip() or len(s["name"]) > 100 or not number(s.get("priority"), 1, 3):
             raise ValueError("Invalid subject.")
-        date.fromisoformat(s["examDate"])
+        exam_date = s.get("examDate")
+        if not isinstance(exam_date, str):
+            raise ValueError("Invalid exam date.")
+        if exam_date:
+            date.fromisoformat(exam_date)
     for t in data["tasks"]:
         if not isinstance(t.get("title"), str) or not isinstance(t.get("subjectId"), str) or type(t.get("completed")) is not bool or not number(t.get("minutes"), 1, 720):
             raise ValueError("Invalid task.")
@@ -150,13 +154,13 @@ def dispatch(user_id, path, method, body):
         validate_state(data)
         today = body.get("today", date.today().isoformat())
         date.fromisoformat(today)
-        subjects = [s for s in data["subjects"] if s["examDate"] >= today]
+        subjects = [s for s in data["subjects"] if not s["examDate"] or s["examDate"] >= today]
         if not subjects:
-            raise ValueError("Add an upcoming exam before generating a plan.")
-        budget = max(0, round(data["dailyHours"] * 60) - sum(t["minutes"] for t in data["tasks"] if t["date"] == today and t["completed"]))
-        if budget == 0:
+            raise ValueError("Add a subject before generating a plan.")
+        budget = max(0, round(data["dailyHours"] * 60) - sum(t["minutes"] for t in data["tasks"] if t["date"] == today and (t["completed"] or not t["subjectId"])))
+        if budget < 5:
             return response(200, {"tasks": []})
-        plan = converse(json.dumps({"instruction": "Create today's study plan using deadlines, priorities and past performance. Return {tasks:[{subjectId,title,minutes}]}. Each task must take 5 to 50 minutes. Total minutes must not exceed the budget. Use the exact subject IDs provided.", "subjects": subjects, "budgetMinutes": budget, "today": today, "recentQuizResults": data["attempts"][-10:]}), True)
+        plan = converse(json.dumps({"instruction": "Create today's study plan using exam dates when present, priorities and past performance. Subjects with an empty examDate have no scheduled exam and may still be included. Return {tasks:[{subjectId,title,minutes}]}. Each task must take 5 to 50 minutes. Total minutes must not exceed the budget. Use the exact subject IDs provided.", "subjects": subjects, "budgetMinutes": budget, "today": today, "recentQuizResults": data["attempts"][-10:]}), True)
         tasks = plan.get("tasks", []) if isinstance(plan, dict) else []
         valid_ids = {s["id"] for s in subjects}
         if not isinstance(tasks, list) or not tasks or len(tasks) > 150:

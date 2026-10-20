@@ -64,16 +64,20 @@ export const emptyStudy: StudyData = {
   dailyHours: 2,
 };
 export function calendarEvents(data: StudyData): CalendarEvent[] {
-  const subjects = new Map(data.subjects.map((subject) => [subject.id, subject.name]));
+  const subjects = new Map(
+    data.subjects.map((subject) => [subject.id, subject.name]),
+  );
   return [
-    ...data.subjects.map((subject) => ({
-      id: `exam-${subject.id}`,
-      title: `${subject.name} exam`,
-      date: subject.examDate,
-      type: "exam" as const,
-      subject: subject.name,
-      completed: false,
-    })),
+    ...data.subjects
+      .filter((subject) => subject.examDate)
+      .map((subject) => ({
+        id: `exam-${subject.id}`,
+        title: `${subject.name} exam`,
+        date: subject.examDate,
+        type: "exam" as const,
+        subject: subject.name,
+        completed: false,
+      })),
     ...(data.deadlines ?? []).map((deadline) => ({
       id: `deadline-${deadline.id}`,
       title: deadline.title,
@@ -82,22 +86,26 @@ export function calendarEvents(data: StudyData): CalendarEvent[] {
       subject: subjects.get(deadline.subjectId) ?? "General",
       completed: deadline.completed,
     })),
-  ].sort((a, b) => a.date.localeCompare(b.date) || a.title.localeCompare(b.title));
+  ].sort(
+    (a, b) => a.date.localeCompare(b.date) || a.title.localeCompare(b.title),
+  );
 }
 export function localDate(date = new Date()) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
 export function generatePlan(data: StudyData, today = localDate()): Task[] {
   const subjects = data.subjects
-    .filter((s) => s.examDate >= today)
+    .filter((s) => !s.examDate || s.examDate >= today)
     .sort((a, b) => {
       const urgency = (s: Subject) =>
-        s.priority /
-        Math.max(1, (Date.parse(s.examDate) - Date.parse(today)) / 86400000);
+        s.examDate
+          ? s.priority /
+            Math.max(1, (Date.parse(s.examDate) - Date.parse(today)) / 86400000)
+          : s.priority / 30;
       return urgency(b) - urgency(a);
     });
   const completedMinutes = data.tasks
-    .filter((t) => t.date === today && t.completed)
+    .filter((t) => t.date === today && (t.completed || !t.subjectId))
     .reduce((sum, t) => sum + t.minutes, 0);
   let remaining = Math.max(
     0,
@@ -105,7 +113,7 @@ export function generatePlan(data: StudyData, today = localDate()): Task[] {
   );
   const plan: Task[] = [];
   let index = 0;
-  while (subjects.length && remaining > 0) {
+  while (subjects.length && remaining >= 5) {
     const subject = subjects[index % subjects.length];
     const minutes = Math.min(50, remaining);
     plan.push({
@@ -188,7 +196,8 @@ export function isStudyData(value: unknown): value is StudyData {
         s &&
         str(s.id) &&
         str(s.name) &&
-        /^\d{4}-\d{2}-\d{2}$/.test(s.examDate) &&
+        str(s.examDate) &&
+        (s.examDate === "" || /^\d{4}-\d{2}-\d{2}$/.test(s.examDate)) &&
         num(s.priority) &&
         s.priority >= 1 &&
         s.priority <= 3,

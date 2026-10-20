@@ -57,6 +57,21 @@ class BackendTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             handler.validate_state(data)
 
+    def test_general_tasks_and_subjects_without_exams_are_valid(self):
+        data = copy.deepcopy(handler.EMPTY)
+        data["subjects"] = [{"id": "reading", "name": "Reading", "examDate": "", "priority": 2}]
+        data["tasks"] = [{"id": "errand", "subjectId": "", "title": "Buy supplies", "date": "2026-10-21", "minutes": 20, "completed": False}]
+        self.assertIn("Buy supplies", handler.validate_state(data))
+        with patch("handler.converse", return_value={"tasks": [{"subjectId": "reading", "title": "Read", "minutes": 30}]}) as converse:
+            result = handler.handle(self.event("planner/generate", body={"data": data, "today": "2026-10-21"}), None)
+        self.assertEqual(result["statusCode"], 200)
+        self.assertEqual(json.loads(result["body"])["tasks"][0]["subjectId"], "reading")
+        self.assertIn('"examDate": ""', converse.call_args.args[0])
+        self.assertIn('"budgetMinutes": 100', converse.call_args.args[0])
+        data["subjects"][0]["examDate"] = None
+        with self.assertRaises(ValueError):
+            handler.validate_state(data)
+
     def test_ai_schedule_cannot_exceed_daily_budget(self):
         data = copy.deepcopy(handler.EMPTY)
         data["dailyHours"] = .5
